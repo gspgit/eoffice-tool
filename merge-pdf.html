@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge PDF Files - PDF Toolkit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="assets/logo.png" alt="PDF Toolkit">
+            </a>
+            <nav class="main-nav">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Tool Interface -->
+    <main class="tool-interface">
+        <div class="tool-header">
+            <h1><i class="fas fa-copy"></i> Merge PDF Files</h1>
+            <p class="tool-description">Combine multiple PDF documents into one</p>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="upload-section">
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-content">
+                    <i class="fas fa-file-upload"></i>
+                    <h3>Select PDF files or drag here</h3>
+                    <input type="file" id="fileInput" accept=".pdf" multiple hidden>
+                    <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                        Choose Files
+                    </button>
+                </div>
+
+                <!-- File List -->
+                <div class="file-list" id="fileList"></div>
+            </div>
+
+            <!-- Progress Bar -->
+            <!-- Replace existing progress bar with this -->
+<div class="progress-container" id="progressBar">
+    <div class="progress-fill" style="width: 0%"></div>
+    <div class="progress-text">0%</div>
+</div>
+        </div>
+
+        <!-- Page Order Customization -->
+        <div class="page-order-container">
+            <h3>Page Order Customization</h3>
+            
+            <!-- Scrollable Grid Container -->
+            <div id="pagesGridContainer">
+  <div class="pages-grid" id="pagesGrid">
+                    <!-- Page thumbnails will be inserted here by JavaScript -->
+            </div>
+
+            <!-- Sticky Action Buttons -->
+            <div class="action-buttons">
+                <div id="pageCount" class="page-count">0 pages</div>
+                <button class="btn-primary" onclick="mergeFiles()">
+                    <i class="fas fa-merge"></i> Merge PDFs
+                </button>
+            </div>
+
+            <!-- Page Order Controls -->
+            <div class="page-order-actions">
+                <button class="btn-secondary" onclick="resetPageOrder()">
+                    <i class="fas fa-undo"></i> Reset Order
+                </button>
+                <button class="btn-secondary" onclick="clearFiles()">
+                    <i class="fas fa-trash"></i> Clear Files
+                </button>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3>How to Merge PDFs:</h3>
+            <ol>
+                <li>Select PDF files using button or drag & drop</li>
+                <li>Adjust page ranges using the inputs below each file</li>
+                <li>Drag files or individual pages to reorder</li>
+                <li>Preview final order in the page grid</li>
+                <li>Click "Merge PDFs" to generate combined file</li>
+            </ol>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Notifications -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- Zoom Overlay -->
+    <div class="zoom-overlay" onclick="closeZoom()">
+        <img src="" class="zoomed-page" alt="Zoomed Page">
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/merge-pdf.js"></script>
+</body>
+</html>

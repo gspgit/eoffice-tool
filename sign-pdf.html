@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign PDF - PDF Toolkit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+       <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="assets/logo.png" alt="PDF Toolkit" style="height: 40px;">
+            </a>
+            <nav class="main-nav">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="tool-interface">
+        <!-- PDF Section -->
+        <div class="pdf-section">
+            <div class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-content">
+                        <i class="fas fa-file-pdf fa-3x"></i>
+                        <h3>Drag & Drop PDF or Click to Upload</h3>
+                        <input type="file" id="fileInput" accept=".pdf" hidden>
+                        <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                            Choose PDF
+                        </button>
+                    </div>
+                    <div class="file-info" id="fileInfo"></div>
+                </div>
+            </div>
+            <div id="pdfPreview" class="pdf-preview"></div>
+        </div>
+
+        <!-- Fixed Signature Panel -->
+        <div class="signature-panel">
+            <div class="signature-toggle">
+                <div class="signature-tab active" data-type="draw">Draw</div>
+                <div class="signature-tab" data-type="image">Image</div>
+            </div>
+
+            <!-- Drawing Tab -->
+            <div class="signature-content active" data-type="draw">
+                <canvas id="signatureCanvas"></canvas>
+                <div class="signature-controls">
+                    <input type="color" id="inkColor" value="#000000">
+                    <input type="range" id="brushSize" min="1" max="10" value="2">
+                    <button onclick="clearSignature()" class="btn-clear">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Image Tab -->
+            <div class="signature-content" data-type="image">
+                <div class="image-upload">
+                    <input type="file" id="imageUpload" accept="image/*" hidden>
+                    <button class="btn-upload" onclick="document.getElementById('imageUpload').click()">
+                        <i class="fas fa-upload"></i> Upload Image
+                    </button>
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+            </div>
+
+            <button class="btn-sign" onclick="signPDF()">
+                <i class="fas fa-file-signature"></i> Sign & Download
+            </button>
+        </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="sign-pdf.js"></script>
+</body>
+</html>

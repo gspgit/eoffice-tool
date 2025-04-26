@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Word Converter - PDF Toolkit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="assets/logo.png" alt="PDF Toolkit">
+            </a>
+            <nav class="main-nav">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- PDF to Word Interface -->
+    <main class="tool-interface">
+        <div class="tool-header">
+            <h1><i class="fas fa-file-word"></i> PDF to Word Converter</h1>
+            <p class="tool-description">Convert PDF documents to editable Word files</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="converter-container">
+            <!-- File Upload -->
+            <div class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-content">
+                        <i class="fas fa-file-pdf"></i>
+                        <h3>Select PDF file or drag here</h3>
+                        <input type="file" id="fileInput" accept=".pdf" hidden>
+                        <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                            Choose PDF
+                        </button>
+                    </div>
+                    <div class="file-info" id="fileInfo"></div>
+                </div>
+            </div>
+
+            <!-- Conversion Options -->
+            <div class="conversion-options">
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="preserveLayout" checked>
+                        Preserve Layout
+                    </label>
+                    <label>
+                        <input type="checkbox" id="extractImages">
+                        Extract Images
+                    </label>
+                </div>
+                <div class="option-group">
+                    <label>Output Format:</label>
+                    <select id="outputFormat">
+                        <option value="docx">DOCX (Word Document)</option>
+                        <option value="doc">DOC (Word 97-2003)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="convertToWord()">
+                    <i class="fas fa-file-export"></i> Convert to Word
+                </button>
+                <button class="btn-secondary" onclick="clearFile()">
+                    Clear File
+                </button>
+            </div>
+        </div>
+
+        <!-- Conversion Notice -->
+        <div class="conversion-notice">
+            <i class="fas fa-info-circle"></i>
+            <p>Note: Complex formatting may not be preserved perfectly during conversion</p>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3>How to Convert:</h3>
+            <ol>
+                <li>Upload your PDF document</li>
+                <li>Select conversion options</li>
+                <li>Click "Convert to Word"</li>
+                <li>Download editable Word file</li>
+            </ol>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.0.375/pdf.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/pdf-to-word.js"></>
+</body>
+</html>

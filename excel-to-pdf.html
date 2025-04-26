@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel to PDF - PDF Toolkit</title>
+    
+    <!-- Performance optimizations -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Primary CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- External Dependencies -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Inline Critical CSS -->
+    <style>
+        /* Loading spinner styles */
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .btn-primary[disabled] {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo" aria-label="Home">
+                <img src="assets/logo.png" alt="PDF Toolkit logo" loading="lazy">
+            </a>
+            <nav class="main-nav" aria-label="Main navigation">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="tool-interface">
+        <!-- Tool Header -->
+        <div class="tool-header">
+            <h1><i class="fas fa-file-excel" aria-hidden="true"></i> Excel to PDF</h1>
+            <p class="tool-description">Convert Excel spreadsheets to professional PDF documents</p>
+        </div>
+
+        <!-- Conversion Interface -->
+        <div class="excel-container">
+            <!-- File Upload Section -->
+            <section aria-labelledby="uploadHeading">
+                <h2 id="uploadHeading" class="sr-only">File Upload</h2>
+                <div class="upload-section">
+                    <div class="drop-zone" id="dropZone" role="region" aria-label="File drop zone">
+                        <div class="drop-content">
+                            <i class="fas fa-file-excel" aria-hidden="true"></i>
+                            <h3>Select Excel file or drag here</h3>
+                            <input type="file" id="fileInput" accept=".xls,.xlsx" hidden>
+                            <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                                Choose File
+                            </button>
+                        </div>
+                        <div class="file-info" id="fileInfo" role="status"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Conversion Controls -->
+            <section aria-labelledby="settingsHeading">
+                <h2 id="settingsHeading" class="sr-only">Conversion Settings</h2>
+                <div class="conversion-options">
+                    <div class="option-group">
+                        <label for="pageOrientation">Page Orientation:</label>
+                        <select id="pageOrientation">
+                            <option value="portrait">Portrait</option>
+                            <option value="landscape">Landscape</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label for="conversionMode">Conversion Mode:</label>
+                        <select id="conversionMode">
+                            <option value="table">As Table</option>
+                            <option value="image">As Image</option>
+                        </select>
+                    </div>
+
+                    <div class="option-group">
+                        <label for="pageMargins">Page Margins:</label>
+                        <select id="pageMargins">
+                            <option value="10">Normal</option>
+                            <option value="5">Narrow</option>
+                            <option value="20">Wide</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Preview Section -->
+            <section aria-labelledby="previewHeading">
+                <h2 id="previewHeading">Preview (First Sheet)</h2>
+                <div class="preview-section">
+                    <div class="table-preview" id="tablePreview" role="region" aria-live="polite"></div>
+                </div>
+            </section>
+
+            <!-- Action Controls -->
+            <section aria-labelledby="actionsHeading">
+                <h2 id="actionsHeading" class="sr-only">Conversion Actions</h2>
+                <div class="action-buttons">
+                    <button class="btn-primary" id="convertBtn" onclick="convertToPDF()" aria-live="polite">
+                        <i class="fas fa-file-pdf" aria-hidden="true"></i> Convert to PDF
+                    </button>
+                    <button class="btn-secondary" onclick="clearAll()">
+                        Clear All
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Conversion Notice -->
+        <aside class="conversion-notice" aria-label="Conversion notice">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            <p>Note: Complex formatting might not be preserved perfectly in table mode</p>
+        </aside>
+    </main>
+
+    <!-- Loading Indicator -->
+    <div id="loading" role="alert" aria-busy="true">
+        <div class="spinner"></div>
+        <p>Converting...</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Script Loading -->
+    <!-- Core Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- UI Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <!-- Application Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/excel-to-pdf.js"></script>
+</body>
+</html>

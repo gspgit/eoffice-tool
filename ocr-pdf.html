@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR PDF - PDF Toolkit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="assets/logo.png" alt="PDF Toolkit">
+            </a>
+            <nav class="main-nav">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- OCR PDF Interface -->
+    <main class="tool-interface">
+        <div class="tool-header">
+            <h1><i class="fas fa-text-height"></i> OCR PDF</h1>
+            <p class="tool-description">Extract text from scanned PDFs and images</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="ocr-container">
+            <!-- File Upload -->
+            <div class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-content">
+                        <i class="fas fa-file-pdf"></i>
+                        <h3>Select PDF/image file or drag here</h3>
+                        <input type="file" id="fileInput" accept=".pdf,image/*" hidden>
+                        <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                            Choose File
+                        </button>
+                    </div>
+                    <div class="file-info" id="fileInfo"></div>
+                </div>
+            </div>
+
+            <!-- OCR Options -->
+            <div class="ocr-options">
+                <div class="option-group">
+                    <label>Language:</label>
+                    <select id="ocrLanguage">
+                        <option value="eng">English</option>
+                        <option value="spa">Spanish</option>
+                        <option value="fra">French</option>
+                        <option value="deu">German</option>
+                        <option value="chi_sim">Chinese</option>
+                        <option value="ara">Arabic</option>
+                    </select>
+                </div>
+                
+                <div class="option-group">
+                    <label>Output Format:</label>
+                    <select id="outputFormat">
+                        <option value="searchable-pdf">Searchable PDF</option>
+                        <option value="text">Text File</option>
+                        <option value="docx">Word Document</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Progress & Results -->
+            <div class="ocr-results">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="preview-pane" id="previewPane"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="processOCR()">
+                    <i class="fas fa-search"></i> Start OCR
+                </button>
+                <button class="btn-secondary" onclick="clearAll()">
+                    Clear All
+                </button>
+            </div>
+        </div>
+
+        <!-- OCR Notice -->
+        <div class="ocr-notice">
+            <i class="fas fa-info-circle"></i>
+            <p>OCR accuracy depends on image quality. Recommended resolution: 300+ DPI</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/tesseract.js@v4.0.2/dist/tesseract.min.js"></script>
+    <!-- Added required libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdfjs-dist@2.6.347/build/pdf.worker.min.js"></script>
+    <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+    
+    <!-- Your scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/ocr-pdf.js"></script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Page Numbers - PDF Toolkit</title>
+    <meta name="description" content="Add customizable page numbers to PDF documents with PDF Toolkit">
+    <meta name="keywords" content="PDF, page numbers, PDF editor, document processing">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/page-numbers.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header" role="banner">
+        <div class="header-container">
+            <a href="/" class="logo" aria-label="PDF Toolkit Home">
+                <img src="assets/logo.png" alt="PDF Toolkit">
+            </a>
+            <nav class="main-nav" role="navigation">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Interface -->
+    <main class="tool-interface" role="main">
+        <div class="tool-header">
+            <h1><i class="fas fa-file-pdf" aria-hidden="true"></i> Add Page Numbers</h1>
+            <p class="tool-description">Customize and add page numbers to PDF documents</p>
+        </div>
+
+        <div class="converter-container">
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading-indicator" style="display: none;" aria-live="polite">
+                <i class="fas fa-spinner fa-spin"></i> Processing your PDF...
+            </div>
+
+            <!-- Error Display -->
+            <div id="errorAlert" class="alert" style="display: none;" role="alert" aria-live="assertive"></div>
+
+            <!-- File Upload -->
+            <div class="upload-section">
+                <div class="drop-zone" id="dropZone" role="region" aria-label="PDF drop zone">
+                    <div class="drop-content">
+                        <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                        <h3>Select PDF file or drag here</h3>
+                        <input type="file" id="fileInput" accept=".pdf" hidden>
+                        <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                            Choose File
+                        </button>
+                    </div>
+                    <div class="file-info" id="fileInfo" aria-live="polite"></div>
+                </div>
+            </div>
+
+           <!-- Customization Options -->
+<div class="customization-options">
+    <!-- Position Options -->
+    <div class="option-group">
+        <label for="position">Position:</label>
+        <select id="position">
+            <option value="top-left">Top Left</option>
+            <option value="top-right">Top Right</option>
+            <option value="bottom-center" selected>Bottom Center</option>
+            <option value="bottom-left">Bottom Left</option>
+            <option value="bottom-right">Bottom Right</option>
+        </select>
+    </div>
+
+    <!-- Margin Size Input (ADDED THIS SECTION) -->
+    <div class="option-group">
+        <label for="marginSize">Margin Size (px):</label>
+        <input type="number" id="marginSize" value="20" min="0" max="100" step="5">
+    </div>
+
+    <!-- Format Options -->
+    <div class="option-group">
+        <label for="numberFormat">Number Format:</label>
+        <select id="numberFormat">
+            <option value="1">Numbers (1, 2, 3)</option>
+            <option value="A">Uppercase Letters (A, B, C)</option>
+            <option value="a">Lowercase Letters (a, b, c)</option>
+            <option value="I">Roman Numerals (I, II, III)</option>
+            <option value="i">Lowercase Roman (i, ii, iii)</option>
+        </select>
+    </div>
+
+                <!-- Style Options -->
+                <div class="option-group">
+                    <label for="fontFamily">Font Style:</label>
+                    <div class="style-options">
+                        <select id="fontFamily">
+                            <option value="Helvetica">Helvetica</option>
+                            <option value="Times-Roman">Times New Roman</option>
+                            <option value="Courier">Courier</option>
+                        </select>
+                        <select id="fontSize">
+                            <option value="10">10pt</option>
+                            <option value="12" selected>12pt</option>
+                            <option value="14">14pt</option>
+                            <option value="16">16pt</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Appearance Options -->
+                <div class="option-group">
+                    <label for="textColor">Color:</label>
+                    <input type="color" id="textColor" value="#000000">
+                </div>
+
+                <!-- Advanced Options -->
+                <div class="option-group advanced-options">
+                    <label>
+                        <input type="checkbox" id="startFrom"> Start from:
+                    </label>
+                    <input type="number" id="startNumber" value="1" min="1" disabled>
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="skipFirstPage"> Skip first page
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-primary" id="addNumbersBtn">
+                    <i class="fas fa-magic"></i> Add Page Numbers
+                </button>
+                <button class="btn-secondary" id="clearBtn">
+                    Clear All
+                </button>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <h3>Preview</h3>
+                <div class="preview-container" id="previewContainer" aria-live="polite">
+                    <!-- Preview pages will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversion Notice -->
+        <div class="conversion-notice">
+            <i class="fas fa-info-circle"></i>
+            <p>Note: Complex layouts may require manual adjustment of position values</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer" role="contentinfo">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+    <script>
+        // Initialize PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="js/page-numbers.js"></script>
+</body>
+</html>

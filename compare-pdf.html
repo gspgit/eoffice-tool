@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF Compare Tool</title>
+        <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="pdf-viewer">
+            <input type="file" id="file1" accept=".pdf" class="btn">
+            <canvas id="canvas1"></canvas>
+        </div>
+        <div class="pdf-viewer">
+            <input type="file" id="file2" accept=".pdf" class="btn">
+            <canvas id="canvas2"></canvas>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="compareText()">Text Compare</button>
+            <button class="btn" onclick="compareVisual()">Visual Compare</button>
+            <div id="results" style="margin-top:20px;"></div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.0.0/diff.min.js"></script>
+</body>
+</html>

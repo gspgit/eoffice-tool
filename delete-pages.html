@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete PDF Pages - PDF Toolkit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="assets/logo.png" alt="PDF Toolkit">
+            </a>
+            <nav class="main-nav">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="tool-interface">
+        <div class="tool-header">
+            <h1><i class="fas fa-trash-alt"></i> Delete PDF Pages</h1>
+            <p class="tool-description">Remove specific pages from PDF documents</p>
+        </div>
+
+        <div class="delete-container">
+            <!-- File Upload -->
+            <section class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-content">
+                        <i class="fas fa-file-pdf upload-icon"></i>
+                        <h3>Select PDF file or drag here</h3>
+                        <input type="file" id="fileInput" accept=".pdf" hidden>
+                        <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                            Choose PDF
+                        </button>
+                    </div>
+                    <div class="file-info" id="fileInfo"></div>
+                </div>
+            </section>
+
+            <!-- Preview Section -->
+            <section class="preview-section">
+                <div class="page-count" id="pageCount">Total Pages: 0</div>
+                <div class="page-preview" id="pagePreview">
+                    <!-- PDF pages will be rendered here -->
+                </div>
+            </section>
+
+            <!-- Page Controls -->
+            <section class="page-controls">
+                <div class="input-group">
+                    <label for="pagesToDelete">Pages to Delete:</label>
+                    <input type="text" id="pagesToDelete" 
+                           placeholder="Example: 1,3-5,7"
+                           pattern="^[0-9,\- ]+$">
+                    <div class="hint">Enter page numbers or ranges separated by commas</div>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="deletePages()">
+                    <i class="fas fa-trash"></i> Delete Pages
+                </button>
+                <button class="btn-secondary" onclick="clearAll()">
+                    <i class="fas fa-undo"></i> Clear All
+                </button>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <section class="instructions">
+            <h3>How to Delete Pages:</h3>
+            <ol>
+                <li>Upload your PDF document</li>
+                <li>Preview pages in the display area</li>
+                <li>Enter pages/ranges to delete</li>
+                <li>Download the modified PDF</li>
+            </ol>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/delete-pages.js"></script>
+</body>
+</html>

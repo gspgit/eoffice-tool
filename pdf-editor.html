@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Editor - PDF Toolkit</title>
+    <!-- Add dependencies here -->
+<!-- Required Dependencies -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+<!-- Local Files -->
+<link rel="stylesheet" href="css/style.css">
+<script src="js/pdf-editor.js" defer></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="assets/logo.png" alt="PDF Toolkit">
+            </a>
+            <nav class="main-nav">
+                <a href="index.html">Home</a>
+                <a href="#tools">Tools</a>
+                <a href="#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Editor Interface -->
+    <main class="tool-interface">
+        <!-- Tool Header -->
+        <div class="tool-header">
+            <h1><i class="fas fa-edit"></i> PDF Editor</h1>
+            <p class="tool-description">Edit PDF documents with multiple tools</p>
+        </div>
+
+        <!-- Editor Container -->
+        <div class="pdf-editor-container">
+            <!-- Left Panel: Tools -->
+            <div class="editor-tools">
+                <div class="toolbar">
+                    <button class="tool-btn" data-tool="text">
+                        <i class="fas fa-font"></i> Text
+                    </button>
+                    <button class="tool-btn" data-tool="shape">
+                        <i class="fas fa-shapes"></i> Shapes
+                    </button>
+                    <button class="tool-btn" data-tool="signature">
+                        <i class="fas fa-signature"></i> Signature
+                    </button>
+                    <input type="color" id="colorPicker" value="#000000">
+                </div>
+
+                <!-- File Upload -->
+                <div class="file-upload">
+                    <input type="file" id="pdfInput" accept=".pdf">
+                    <label for="pdfInput" class="upload-label">
+                        <i class="fas fa-file-upload"></i> Upload PDF
+                    </label>
+                </div>
+            </div>
+
+            <!-- Center Panel: PDF Viewer -->
+            <div class="pdf-viewer">
+                <canvas id="pdfCanvas"></canvas>
+                <div id="annotationLayer"></div>
+            </div>
+
+            <!-- Right Panel: Properties -->
+            <div class="properties-panel">
+                <h3>Properties</h3>
+                <div id="textProperties" class="properties-group">
+                    <label>Font Size</label>
+                    <input type="number" id="fontSize" min="8" max="72" value="12">
+                    
+                    <label>Font Family</label>
+                    <select id="fontFamily">
+                        <option>Arial</option>
+                        <option>Times New Roman</option>
+                    </select>
+                </div>
+                
+                <div id="shapeProperties" class="properties-group">
+                    <label>Shape Type</label>
+                    <select id="shapeType">
+                        <option value="rectangle">Rectangle</option>
+                        <option value="circle">Circle</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Signature Modal -->
+    <div id="signatureModal" class="modal">
+        <div class="modal-content">
+            <canvas id="signatureCanvas"></canvas>
+            <button id="saveSignature">Save Signature</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

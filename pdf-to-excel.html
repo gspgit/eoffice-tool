@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Excel - PDF Toolkit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+<!-- Add these in the head section after existing CSS links -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script src="https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="assets/logo.png" alt="PDF Toolkit">
+            </a>
+            <nav class="main-nav">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="https://assistant.google.com/">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- PDF to Excel Interface -->
+    <main class="tool-interface">
+        <div class="tool-header">
+            <h1><i class="fas fa-file-pdf"></i> PDF to Excel</h1>
+            <p class="tool-description">Convert PDF tables to Excel spreadsheets</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="pdf-container">
+            <!-- File Upload -->
+            <div class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-content">
+                        <i class="fas fa-file-pdf"></i>
+                        <h3>Select PDF file or drag here</h3>
+                        <input type="file" id="fileInput" accept=".pdf" hidden>
+                        <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                            Choose File
+                        </button>
+                    </div>
+                    <div class="file-info" id="fileInfo"></div>
+                </div>
+            </div>
+
+            <!-- Conversion Options -->
+           
+<div class="conversion-options">
+<!-- Add this to the conversion options section -->
+<div class="option-group">
+    <label>OCR Mode:</label>
+    <select id="ocrMode">
+        <option value="auto">Auto Detect</option>
+        <option value="force">Force OCR</option>
+    </select>
+</div>
+                <div class="option-group">
+                    <label>Pages to Convert:</label>
+                    <input type="text" id="pageRange" placeholder="All pages">
+                </div>
+                
+                <div class="option-group">
+                    <label>Table Detection:</label>
+                    <select id="tableDetection">
+                        <option value="auto">Auto Detect</option>
+                        <option value="manual">Manual Selection</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <h4>Detected Tables Preview:</h4>
+                <div class="table-preview" id="tablePreview"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="convertToExcel()">
+                    <i class="fas fa-file-excel"></i> Convert to Excel
+                </button>
+                <button class="btn-secondary" onclick="clearAll()">
+                    Clear All
+                </button>
+            </div>
+        </div>
+
+        <!-- Conversion Notice -->
+        <div class="conversion-notice">
+            <i class="fas fa-info-circle"></i>
+            <p>Note: Complex table structures might require manual adjustment</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/pdf-to-excel.js"></script>
+</body>
+</html>

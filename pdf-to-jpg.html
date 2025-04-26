@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to JPG Converter - PDF Toolkit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="assets/logo.png" alt="PDF Toolkit">
+            </a>
+            <nav class="main-nav">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- PDF to JPG Interface -->
+    <main class="tool-interface">
+        <div class="tool-header">
+            <h1><i class="fas fa-file-image"></i> PDF to JPG Converter</h1>
+            <p class="tool-description">Extract images from PDF documents</p>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="upload-section">
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-content">
+                    <i class="fas fa-file-pdf"></i>
+                    <h3>Select PDF file or drag here</h3>
+                    <input type="file" id="fileInput" accept=".pdf" hidden>
+                    <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                        Choose PDF
+                    </button>
+                </div>
+                <div class="conversion-status" id="conversionStatus"></div>
+            </div>
+
+            <!-- Conversion Options -->
+            <div class="conversion-options">
+                <div class="option-group">
+                    <label>Image Quality:</label>
+                    <select id="imageQuality">
+                        <option value="1">High (100%)</option>
+                        <option value="0.8" selected>Medium (80%)</option>
+                        <option value="0.6">Low (60%)</option>
+                    </select>
+                </div>
+
+                <div class="option-group">
+                    <label>Output Format:</label>
+                    <select id="imageFormat">
+                        <option value="jpg">JPG</option>
+                        <option value="png">PNG</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="extractImages()">
+                    <i class="fas fa-file-export"></i> Extract Images
+                </button>
+                <button class="btn-secondary" onclick="clearFile()">
+                    Clear File
+                </button>
+            </div>
+        </div>
+
+        <!-- Image Results -->
+        <div class="image-results" id="imageResults"></div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3>How to Convert:</h3>
+            <ol>
+                <li>Upload your PDF document</li>
+                <li>Select quality and format settings</li>
+                <li>Click "Extract Images" to process</li>
+                <li>Download individual images or all as ZIP</li>
+            </ol>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/pdf-to-jpg.js"></script>
+</body>
+</html>

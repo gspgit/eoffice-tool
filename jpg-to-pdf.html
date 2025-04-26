@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JPG to PDF Converter - PDF Toolkit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="assets/logo.png" alt="PDF Toolkit">
+            </a>
+            <nav class="main-nav">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- JPG to PDF Interface -->
+    <main class="tool-interface">
+        <div class="tool-header">
+            <h1><i class="fas fa-file-image"></i> JPG to PDF Converter</h1>
+            <p class="tool-description">Convert images to PDF documents</p>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="upload-section">
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-content">
+                    <i class="fas fa-images"></i>
+                    <h3>Select images or drag here</h3>
+                    <input type="file" id="fileInput" accept="image/*" multiple hidden>
+                    <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                        Choose Images
+                    </button>
+                </div>
+                <div class="image-preview" id="imagePreview"></div>
+            </div>
+
+            <!-- Conversion Options -->
+            <div class="conversion-options">
+                <div class="option-group">
+                    <label>Page Orientation:</label>
+                    <select id="pageOrientation">
+                        <option value="portrait">Portrait</option>
+                        <option value="landscape">Landscape</option>
+                        <option value="auto">Auto (Match Image)</option>
+                    </select>
+                </div>
+
+                <div class="option-group">
+                    <label>Margin:</label>
+                    <select id="pageMargin">
+                        <option value="0">No Margin</option>
+                        <option value="10" selected>Small Margin</option>
+                        <option value="20">Medium Margin</option>
+                        <option value="30">Large Margin</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="convertToPDF()">
+                    <i class="fas fa-file-pdf"></i> Convert to PDF
+                </button>
+                <button class="btn-secondary" onclick="clearFiles()">
+                    Clear All
+                </button>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3>How to Convert:</h3>
+            <ol>
+                <li>Select or drag image files (JPG, PNG, BMP)</li>
+                <li>Adjust conversion settings if needed</li>
+                <li>Click "Convert to PDF" to create document</li>
+                <li>Download your new PDF file</li>
+            </ol>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/jpg-to-pdf.js"></script>
+</body>
+</html>
