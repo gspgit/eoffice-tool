@@ -11,7 +11,9 @@ const PREVIEW_CONTAINER_ID = 'pageThumbnails';
    STATE MANAGEMENT
    ================ */
 let currentPDF = null;
-let pageRotations = new Map(); // Tracks rotation degrees for each page (0-indexed)
+let currentPDFDoc = null;
+let totalPages = 0;
+let pageRotations = new Map();
 
 /* ====================
    DOM INITIALIZATION
@@ -46,12 +48,21 @@ async function handleFileSelect(e) {
     if (!validateFile(file)) return;
 
     try {
+        clearFile();
         currentPDF = file;
-        pageRotations.clear();
-        await showFileInfo(file);
-        await renderPDFPreview(URL.createObjectURL(file));
+        showLoading(true);
+
+        const url = URL.createObjectURL(file);
+        currentPDFDoc = await pdfjsLib.getDocument(url).promise;
+        totalPages = currentPDFDoc.numPages;
+        URL.revokeObjectURL(url);
+
+        await showFileInfo();
+        await renderPDFPreview();
     } catch (err) {
         handleFileError(err);
+    } finally {
+        showLoading(false);
     }
 }
 
@@ -77,52 +88,41 @@ function validateFile(file) {
     return true;
 }
 
-async function showFileInfo(file) {
-    try {
-        showLoading(true);
-        const pdfDoc = await PDFLib.PDFDocument.load(await file.arrayBuffer());
-        const pageCount = pdfDoc.getPages().length;
-        
-        document.getElementById('fileInfo').innerHTML = `
-            <p><strong>File Name:</strong> ${file.name}</p>
-            <p><strong>Pages:</strong> ${pageCount}</p>
-            <p><strong>Size:</strong> ${formatFileSize(file.size)}</p>
-        `;
-    } finally {
-        showLoading(false);
-    }
+async function showFileInfo() {
+    document.getElementById('fileInfo').innerHTML = `
+        <p><strong>File Name:</strong> ${currentPDF.name}</p>
+        <p><strong>Pages:</strong> ${totalPages}</p>
+        <p><strong>Size:</strong> ${formatFileSize(currentPDF.size)}</p>
+    `;
 }
 
 /* =================
    PDF PREVIEW
    ================= */
-async function renderPDFPreview(url) {
-    try {
-        showLoading(true);
-        const pdf = await pdfjsLib.getDocument(url).promise;
-        const container = document.getElementById(PREVIEW_CONTAINER_ID);
-        container.innerHTML = '';
+async function renderPDFPreview() {
+    const container = document.getElementById(PREVIEW_CONTAINER_ID);
+    container.innerHTML = '';
 
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            await renderPageThumbnail(pdf, pageNum, container);
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+        try {
+            const page = await currentPDFDoc.getPage(pageNum);
+            const pageIndex = pageNum - 1;
+            const thumbnail = await createThumbnailElement(page, pageIndex);
+            container.appendChild(thumbnail);
+        } catch (err) {
+            console.error(`Error rendering page ${pageNum}:`, err);
         }
-    } catch (err) {
-        console.error("Preview error:", err);
-        showAlert('Error generating PDF preview');
-    } finally {
-        showLoading(false);
-        URL.revokeObjectURL(url);
     }
 }
 
-async function renderPageThumbnail(pdf, pageNum, container) {
-    const pageIndex = pageNum - 1;
-    const page = await pdf.getPage(pageNum);
-    const rotation = pageRotations.get(pageIndex) || 0;
-    
+async function createThumbnailElement(page, pageIndex) {
+    const originalRotation = page.getViewport({ scale: 1 }).rotation;
+    const userRotation = pageRotations.get(pageIndex) || 0;
+    const totalRotation = (originalRotation + userRotation) % 360;
+
     const viewport = page.getViewport({ 
         scale: PREVIEW_SCALE,
-        rotation: rotation 
+        rotation: totalRotation
     });
     
     const canvas = document.createElement('canvas');
@@ -130,26 +130,20 @@ async function renderPageThumbnail(pdf, pageNum, container) {
     canvas.height = viewport.height;
     canvas.width = viewport.width;
 
-    // Set white background
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    await page.render({ 
-        canvasContext: context, 
-        viewport 
+    await page.render({
+        canvasContext: context,
+        viewport: viewport
     }).promise;
 
-    const thumbnail = createThumbnailElement(canvas, pageNum, pageIndex);
-    container.appendChild(thumbnail);
-}
-
-function createThumbnailElement(canvas, pageNum, pageIndex) {
     const div = document.createElement('div');
     div.className = 'page-thumbnail';
     div.id = `thumbnail-${pageIndex}`;
     div.innerHTML = `
         <canvas></canvas>
-        <span class="page-number">Page ${pageNum}</span>
+        <span class="page-number">Page ${pageIndex + 1}</span>
     `;
     div.querySelector('canvas').replaceWith(canvas);
     return div;
@@ -159,63 +153,40 @@ function createThumbnailElement(canvas, pageNum, pageIndex) {
    ROTATION CONTROL
    ================= */
 function handleRotationSelection(e) {
-    const rotationDelta = parseInt(e.currentTarget.dataset.degrees);
-    const pagesToRotate = getPagesToRotate();
-    
-    pagesToRotate.forEach(pageIndex => {
-        const current = pageRotations.get(pageIndex) || 0;
-        pageRotations.set(pageIndex, (current + rotationDelta) % 360);
-    });
-    
-    updatePreviewRotations(pagesToRotate);
-    updateButtonStyles(e.currentTarget);
+    try {
+        const rotationDelta = parseInt(e.currentTarget.dataset.degrees);
+        const pagesToRotate = getPagesToRotate();
+        
+        pagesToRotate.forEach(pageIndex => {
+            const current = pageRotations.get(pageIndex) || 0;
+            pageRotations.set(pageIndex, (current + rotationDelta) % 360);
+        });
+        
+        updatePreviewRotations(pagesToRotate);
+        updateButtonStyles(e.currentTarget);
+    } catch (err) {
+        handleRotationError(err);
+    }
 }
 
 async function updatePreviewRotations(pageIndices) {
-    const url = URL.createObjectURL(currentPDF);
-    const pdf = await pdfjsLib.getDocument(url).promise;
-    
-    for (const pageIndex of pageIndices) {
-        const pageNum = pageIndex + 1;
-        const page = await pdf.getPage(pageNum);
-        const thumbnailDiv = document.getElementById(`thumbnail-${pageIndex}`);
-        
-        if (thumbnailDiv) {
-            const newCanvas = await renderPageWithRotation(page, pageIndex);
-            thumbnailDiv.querySelector('canvas').replaceWith(newCanvas);
+    try {
+        showLoading(true);
+        for (const pageIndex of pageIndices) {
+            const page = await currentPDFDoc.getPage(pageIndex + 1);
+            const thumbnailDiv = document.getElementById(`thumbnail-${pageIndex}`);
+            
+            if (thumbnailDiv) {
+                const newCanvas = await createThumbnailElement(page, pageIndex);
+                thumbnailDiv.querySelector('canvas').replaceWith(newCanvas);
+            }
         }
+    } catch (err) {
+        console.error("Rotation preview error:", err);
+        showAlert('Error updating preview');
+    } finally {
+        showLoading(false);
     }
-    URL.revokeObjectURL(url);
-}
-
-async function renderPageWithRotation(page, pageIndex) {
-    const rotation = pageRotations.get(pageIndex) || 0;
-    const viewport = page.getViewport({ 
-        scale: PREVIEW_SCALE,
-        rotation: rotation 
-    });
-    
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-    
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    
-    await page.render({
-        canvasContext: context,
-        viewport: viewport
-    }).promise;
-    
-    return canvas;
-}
-
-function updateButtonStyles(activeButton) {
-    document.querySelectorAll('.angle-btn').forEach(btn => {
-        btn.style.backgroundColor = btn === activeButton ? '#3498db' : '#f8f9fa';
-        btn.style.color = btn === activeButton ? 'white' : '#2c3e50';
-    });
 }
 
 /* =================
@@ -226,8 +197,22 @@ async function rotatePDF() {
     
     try {
         showLoading(true);
-        const pdfDoc = await processPDFRotation();
-        saveRotatedPDF(pdfDoc);
+        const pdfDoc = await PDFLib.PDFDocument.load(await currentPDF.arrayBuffer());
+        const pages = pdfDoc.getPages();
+        const pagesToRotate = getPagesToRotate();
+
+        for (const pageIndex of pagesToRotate) {
+            if (pageIndex >= pages.length) continue;
+            
+            const originalRotation = pages[pageIndex].getRotation().angle;
+            const userRotation = pageRotations.get(pageIndex) || 0;
+            pages[pageIndex].setRotation(PDFLib.degrees(originalRotation + userRotation));
+        }
+
+        const rotatedBytes = await pdfDoc.save();
+        saveAs(new Blob([rotatedBytes], { type: 'application/pdf' }), 
+            `rotated-${currentPDF.name}`);
+        
         showAlert('PDF rotated successfully!', 'success');
     } catch (err) {
         handleRotationError(err);
@@ -236,40 +221,16 @@ async function rotatePDF() {
     }
 }
 
-async function processPDFRotation() {
-    const pdfBytes = await currentPDF.arrayBuffer();
-    const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
-    const pages = pdfDoc.getPages();
-    
-    getPagesToRotate().forEach(pageIndex => {
-        if (pageIndex >= 0 && pageIndex < pages.length) {
-            const currentRotation = pages[pageIndex].getRotation().angle;
-            const additionalRotation = pageRotations.get(pageIndex) || 0;
-            pages[pageIndex].setRotation(PDFLib.degrees(currentRotation + additionalRotation));
-        }
-    });
-
-    return pdfDoc;
-}
-
-function saveRotatedPDF(pdfDoc) {
-    pdfDoc.save().then(rotatedBytes => {
-        saveAs(new Blob([rotatedBytes], { type: 'application/pdf' }), 
-            `rotated-${currentPDF.name}`);
-    });
-}
-
 /* ======================
    PAGE RANGE MANAGEMENT
    ====================== */
 function getPagesToRotate() {
     const rangeInput = document.getElementById('pageRange').value.trim();
-    const totalPages = currentPDF ? currentPDF._pdfInfo?.numPages : 0;
-    return rangeInput ? parsePageRange(rangeInput, totalPages) 
+    return rangeInput ? parsePageRange(rangeInput) 
         : Array.from({ length: totalPages }, (_, i) => i);
 }
 
-function parsePageRange(input, maxPages) {
+function parsePageRange(input) {
     return input.split(',')
         .flatMap(part => {
             const trimmed = part.trim();
@@ -278,21 +239,18 @@ function parsePageRange(input, maxPages) {
             if (trimmed.includes('-')) {
                 const range = trimmed.split('-').map(n => {
                     const num = parseInt(n);
-                    return isNaN(num) ? NaN : Math.max(1, Math.min(num, maxPages));
+                    return isNaN(num) ? NaN : Math.max(1, Math.min(num, totalPages));
                 });
                 
                 if (range.some(isNaN)) return [];
                 const [start, end = start] = range.map(n => n - 1);
-                const first = Math.min(start, end);
-                const last = Math.max(start, end);
-                
-                return Array.from({ length: last - first + 1 }, (_, i) => first + i);
+                return Array.from({ length: Math.max(end - start + 1, 0) }, (_, i) => start + i);
             }
             
             const page = parseInt(trimmed);
             return isNaN(page) ? [] : [page - 1];
         })
-        .filter(n => n >= 0 && n < maxPages);
+        .filter(n => n >= 0 && n < totalPages);
 }
 
 /* ======================
@@ -323,8 +281,8 @@ function handleDrop(e) {
 
 function processDroppedFiles(files) {
     if (files.length > 0) {
-        handleFileSelect({ target: { files } })
-            .catch(err => console.error("Drag-drop error:", err));
+        const event = { target: { files } };
+        handleFileSelect(event).catch(err => console.error("Drag-drop error:", err));
     }
 }
 
@@ -333,6 +291,8 @@ function processDroppedFiles(files) {
    ================= */
 function clearFile() {
     currentPDF = null;
+    currentPDFDoc = null;
+    totalPages = 0;
     pageRotations.clear();
     document.getElementById('fileInfo').innerHTML = '';
     document.getElementById(PREVIEW_CONTAINER_ID).innerHTML = '';
@@ -350,7 +310,7 @@ function resetRotationButtons() {
 function formatFileSize(bytes) {
     const units = ['Bytes', 'KB', 'MB', 'GB'];
     if (bytes === 0) return '0 Byte';
-    const exponent = Math.floor(Math.log(bytes) / Math.log(1024));
+    const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
     return `${(bytes / 1024 ** exponent).toFixed(2)} ${units[exponent]}`;
 }
 
@@ -359,7 +319,7 @@ function showLoading(show) {
 }
 
 function showAlert(message, type = 'error') {
-    alert(message); // Replace with a proper modal implementation
+    alert(`${type.toUpperCase()}: ${message}`);
 }
 
 function handleFileError(err) {
@@ -371,4 +331,12 @@ function handleFileError(err) {
 function handleRotationError(err) {
     console.error("Rotation error:", err);
     showAlert(`Rotation failed: ${err.message}`);
+}
+
+// Initialize button styles update
+function updateButtonStyles(activeButton) {
+    document.querySelectorAll('.angle-btn').forEach(btn => {
+        btn.style.backgroundColor = btn === activeButton ? '#3498db' : '#f8f9fa';
+        btn.style.color = btn === activeButton ? 'white' : '#2c3e50';
+    });
 }
