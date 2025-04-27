@@ -1207,8 +1207,6 @@ input#pageRange {
 
 .page-number {
     position: absolute;
-    top: ;
-    left: ;
     background: rgba(0,0,0,0.7);
     color: white;
     padding: 2px 8px;
