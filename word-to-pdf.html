@@ -6,6 +6,14 @@
     <title>Word to PDF - PDF Toolkit</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <!-- Add PDF Libraries in head <tag>
+        <!--Tab to edit-->
+    </tag>-->
+
+   <script src="/static/js/mammoth.browser.min.js"></script>
+   
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -38,7 +46,7 @@
                         <i class="fas fa-file-word"></i>
                         <h3>Select Word file or drag here</h3>
                         <input type="file" id="fileInput" accept=".doc,.docx" hidden>
-                        <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                        <button class="btn-select" id="selectFileBtn">
                             Choose File
                         </button>
                     </div>
@@ -51,9 +59,9 @@
                 <div class="option-group">
                     <label>Page Size:</label>
                     <select id="pageSize">
-                        <option value="A4">A4</option>
-                        <option value="Letter">Letter</option>
-                        <option value="Legal">Legal</option>
+                        <option value="a4">A4</option>
+                        <option value="letter">Letter</option>
+                        <option value="legal">Legal</option>
                     </select>
                 </div>
                 
@@ -69,13 +77,22 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <button class="btn-primary" onclick="convertToPDF()">
+                <button class="btn-primary" id="convertBtn">
                     <i class="fas fa-file-pdf"></i> Convert to PDF
                 </button>
-                <button class="btn-secondary" onclick="clearAll()">
+                <button class="btn-secondary" id="clearBtn">
                     Clear All
                 </button>
             </div>
+        </div>
+
+        <!-- Preview Container -->
+        <div id="previewContainer" class="preview-area"></div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="loading-overlay">
+            <div class="spinner"></div>
+            <p>Converting...</p>
         </div>
 
         <!-- Conversion Notice -->
@@ -92,10 +109,17 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.8/mammoth.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="js/main.js"></script>
+    <!-- Main JS -->
+    <script>
+        // Initialize jsPDF namespace
+        window.jsPDF = window.jspdf.jsPDF;
+    </script>
     <script src="js/word-to-pdf.js"></script>
+    <script>
+        // Initialize after DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            PDFConverter.init();
+        });
+    </script>
 </body>
 </html>
