@@ -135,61 +135,14 @@
             </ol>
         </div>
     </main>
-
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/pdf-editor.js"></script>
     <!-- Footer -->
     <footer class="main-footer">
         <div class="footer-container">
             <p>© 2025 PDF Toolkit. All rights reserved.</p>
         </div>
     </footer>
-
-    <!-- Scripts -->
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="js/pdf-editor.js"></script>
-    <script>
-        // Basic PDF Editor Functionality
-        let currentPDF = null;
-        let activeTool = 'select';
-        let annotations = [];
-
-        // Initialize tools
-        document.querySelectorAll('.tool-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                activeTool = btn.dataset.tool;
-            });
-        });
-
-        // PDF Rendering
-        async function renderPDF(file) {
-            const pdfDoc = await PDFLib.PDFDocument.load(await file.arrayBuffer());
-            currentPDF = pdfDoc;
-            // Render first page
-            const pages = pdfDoc.getPages();
-            const firstPage = pages[0];
-            // Render to canvas
-            const canvas = document.getElementById('pdfCanvas');
-            // ... rendering logic ...
-        }
-
-        // File Handling
-        document.getElementById('fileInput').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('fileInfo').textContent = file.name;
-                await renderPDF(file);
-            }
-        });
-
-        // Save functionality
-        async function savePDF() {
-            if (currentPDF) {
-                const modifiedPdfBytes = await currentPDF.save();
-                const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
-                // Save handling logic...
-            }
-        }
-    </script>
 </body>
 </html>
