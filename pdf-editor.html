@@ -4,16 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Editor - PDF Toolkit</title>
-    <!-- Add dependencies here -->
-<!-- Required Dependencies -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-
-<!-- Local Files -->
-<link rel="stylesheet" href="css/style.css">
-<script src="js/pdf-editor.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- PDF.js for rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -23,91 +18,178 @@
                 <img src="assets/logo.png" alt="PDF Toolkit">
             </a>
             <nav class="main-nav">
-                <a href="index.html">Home</a>
-                <a href="#tools">Tools</a>
-                <a href="#help">Help</a>
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
             </nav>
         </div>
     </header>
 
-    <!-- Main Editor Interface -->
+    <!-- PDF Editor Interface -->
     <main class="tool-interface">
-        <!-- Tool Header -->
         <div class="tool-header">
             <h1><i class="fas fa-edit"></i> PDF Editor</h1>
-            <p class="tool-description">Edit PDF documents with multiple tools</p>
+            <p class="tool-description">Edit PDF documents directly in your browser</p>
         </div>
 
         <!-- Editor Container -->
-        <div class="pdf-editor-container">
-            <!-- Left Panel: Tools -->
+        <div class="editor-container">
+            <!-- File Upload Section -->
+            <div class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-content">
+                        <i class="fas fa-file-upload"></i>
+                        <h3>Select PDF file to edit</h3>
+                        <input type="file" id="fileInput" accept=".pdf" hidden>
+                        <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                            Choose File
+                        </button>
+                    </div>
+                    <div class="file-info" id="fileInfo"></div>
+                </div>
+            </div>
+
+            <!-- Editing Tools -->
             <div class="editor-tools">
+                <!-- Left Toolbar -->
                 <div class="toolbar">
+                    <button class="tool-btn active" data-tool="select">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <span>Select</span>
+                    </button>
                     <button class="tool-btn" data-tool="text">
-                        <i class="fas fa-font"></i> Text
+                        <i class="fas fa-font"></i>
+                        <span>Text</span>
+                    </button>
+                    <button class="tool-btn" data-tool="highlight">
+                        <i class="fas fa-highlighter"></i>
+                        <span>Highlight</span>
+                    </button>
+                    <button class="tool-btn" data-tool="draw">
+                        <i class="fas fa-pencil-alt"></i>
+                        <span>Draw</span>
                     </button>
                     <button class="tool-btn" data-tool="shape">
-                        <i class="fas fa-shapes"></i> Shapes
+                        <i class="fas fa-shapes"></i>
+                        <span>Shapes</span>
                     </button>
-                    <button class="tool-btn" data-tool="signature">
-                        <i class="fas fa-signature"></i> Signature
+                    <button class="tool-btn" data-tool="image">
+                        <i class="fas fa-image"></i>
+                        <span>Image</span>
                     </button>
-                    <input type="color" id="colorPicker" value="#000000">
+                    <button class="tool-btn" data-tool="erase">
+                        <i class="fas fa-eraser"></i>
+                        <span>Erase</span>
+                    </button>
                 </div>
 
-                <!-- File Upload -->
-                <div class="file-upload">
-                    <input type="file" id="pdfInput" accept=".pdf">
-                    <label for="pdfInput" class="upload-label">
-                        <i class="fas fa-file-upload"></i> Upload PDF
-                    </label>
+                <!-- Canvas Container -->
+                <div class="canvas-container">
+                    <canvas id="pdfCanvas"></canvas>
+                </div>
+
+                <!-- Right Panel -->
+                <div class="right-panel">
+                    <div class="page-thumbnails" id="pageThumbnails"></div>
+                    <div class="properties-panel">
+                        <h4>Properties</h4>
+                        <div class="property-group">
+                            <label>Font Size</label>
+                            <input type="range" id="fontSize" min="8" max="72" value="12">
+                        </div>
+                        <div class="property-group">
+                            <label>Color</label>
+                            <input type="color" id="colorPicker" value="#000000">
+                        </div>
+                        <div class="property-group">
+                            <label>Opacity</label>
+                            <input type="range" id="opacity" min="0" max="1" step="0.1" value="1">
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Center Panel: PDF Viewer -->
-            <div class="pdf-viewer">
-                <canvas id="pdfCanvas"></canvas>
-                <div id="annotationLayer"></div>
+            <!-- Action Buttons -->
+            <div class="editor-actions">
+                <button class="btn-primary" onclick="savePDF()">
+                    <i class="fas fa-save"></i> Save PDF
+                </button>
+                <button class="btn-secondary" onclick="clearAnnotations()">
+                    Clear Changes
+                </button>
+                <button class="btn-secondary" onclick="downloadPDF()">
+                    <i class="fas fa-download"></i> Download
+                </button>
             </div>
+        </div>
 
-            <!-- Right Panel: Properties -->
-            <div class="properties-panel">
-                <h3>Properties</h3>
-                <div id="textProperties" class="properties-group">
-                    <label>Font Size</label>
-                    <input type="number" id="fontSize" min="8" max="72" value="12">
-                    
-                    <label>Font Family</label>
-                    <select id="fontFamily">
-                        <option>Arial</option>
-                        <option>Times New Roman</option>
-                    </select>
-                </div>
-                
-                <div id="shapeProperties" class="properties-group">
-                    <label>Shape Type</label>
-                    <select id="shapeType">
-                        <option value="rectangle">Rectangle</option>
-                        <option value="circle">Circle</option>
-                    </select>
-                </div>
-            </div>
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3>How to Edit PDFs:</h3>
+            <ol>
+                <li>Upload your PDF document</li>
+                <li>Use toolbar tools to add text, highlights, or drawings</li>
+                <li>Adjust properties using the right panel</li>
+                <li>Navigate pages using thumbnails</li>
+                <li>Save or download your edited PDF</li>
+            </ol>
         </div>
     </main>
-
-    <!-- Signature Modal -->
-    <div id="signatureModal" class="modal">
-        <div class="modal-content">
-            <canvas id="signatureCanvas"></canvas>
-            <button id="saveSignature">Save Signature</button>
-        </div>
-    </div>
 
     <!-- Footer -->
     <footer class="main-footer">
         <div class="footer-container">
-            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+            <p>© 2025 PDF Toolkit. All rights reserved.</p>
         </div>
     </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="js/pdf-editor.js"></script>
+    <script>
+        // Basic PDF Editor Functionality
+        let currentPDF = null;
+        let activeTool = 'select';
+        let annotations = [];
+
+        // Initialize tools
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeTool = btn.dataset.tool;
+            });
+        });
+
+        // PDF Rendering
+        async function renderPDF(file) {
+            const pdfDoc = await PDFLib.PDFDocument.load(await file.arrayBuffer());
+            currentPDF = pdfDoc;
+            // Render first page
+            const pages = pdfDoc.getPages();
+            const firstPage = pages[0];
+            // Render to canvas
+            const canvas = document.getElementById('pdfCanvas');
+            // ... rendering logic ...
+        }
+
+        // File Handling
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('fileInfo').textContent = file.name;
+                await renderPDF(file);
+            }
+        });
+
+        // Save functionality
+        async function savePDF() {
+            if (currentPDF) {
+                const modifiedPdfBytes = await currentPDF.save();
+                const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+                // Save handling logic...
+            }
+        }
+    </script>
 </body>
 </html>
