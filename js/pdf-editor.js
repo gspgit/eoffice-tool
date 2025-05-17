@@ -1,105 +1,46 @@
-// PDF Editor Core Functionality
 let currentPdfDoc = null;
-let currentPageNum = 1;
+let currentPage = 1;
 let scale = 1.5;
 let annotations = [];
-let activeTool = 'pointer';
+let activeTool = 'select';
 
-// Initialize PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js';
-
-// Load PDF file
-document.getElementById('fileInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        document.getElementById('fileInfo').textContent = file.name;
-        loadPdf(file);
-    }
-});
-
-// Handle drop zone events
-const dropZone = document.getElementById('dropZone');
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, preventDefaults, false);
-});
-
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
-
-['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, highlight, false);
-});
-
-['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, unhighlight, false);
-});
-
-function highlight() {
-    dropZone.classList.add('highlight');
-}
-
-function unhighlight() {
-    dropZone.classList.remove('highlight');
-}
-
-dropZone.addEventListener('drop', handleDrop, false);
-
-function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const file = dt.files[0];
-    if (file && file.type === 'application/pdf') {
-        document.getElementById('fileInfo').textContent = file.name;
-        loadPdf(file);
-    }
-}
-
-// Load and render PDF
+// PDF Rendering
 async function loadPdf(file) {
     const reader = new FileReader();
-    reader.onload = async function() {
-        const typedArray = new Uint8Array(this.result);
-        try {
-            currentPdfDoc = await pdfjsLib.getDocument(typedArray).promise;
-            renderPage(currentPageNum);
-            generateThumbnails();
-        } catch (error) {
-            console.error('Error loading PDF:', error);
-        }
+    reader.onload = async () => {
+        const pdfData = new Uint8Array(reader.result);
+        const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+        currentPdfDoc = pdfDoc;
+        renderPage(currentPage);
+        generateThumbnails();
     };
     reader.readAsArrayBuffer(file);
 }
 
-// Render PDF page
 async function renderPage(pageNum) {
-    try {
-        const page = await currentPdfDoc.getPage(pageNum);
-        const viewport = page.getViewport({ scale: scale });
-        
-        const canvas = document.getElementById('pdfCanvas');
-        const context = canvas.getContext('2d');
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-        
-        const renderContext = {
-            canvasContext: context,
-            viewport: viewport
-        };
-        
-        await page.render(renderContext).promise;
-        currentPageNum = pageNum;
-    } catch (error) {
-        console.error('Error rendering page:', error);
-    }
+    const page = await currentPdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale });
+    
+    const canvas = document.getElementById('pdfCanvas');
+    const context = canvas.getContext('2d');
+    
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    
+    const renderContext = {
+        canvasContext: context,
+        viewport: viewport
+    };
+    
+    await page.render(renderContext).promise;
 }
 
-// Generate thumbnails
+// Thumbnail Generation
 async function generateThumbnails() {
     const container = document.getElementById('pageThumbnails');
     container.innerHTML = '';
     
-    for (let i = 1; i <= currentPdfDoc.numPages; i++) {
+    for(let i = 1; i <= currentPdfDoc.numPages; i++) {
         const page = await currentPdfDoc.getPage(i);
         const viewport = page.getViewport({ scale: 0.2 });
         
@@ -121,80 +62,89 @@ async function generateThumbnails() {
     }
 }
 
-function gotoPage(pageNum) {
-    if (pageNum !== currentPageNum) {
-        renderPage(pageNum);
+// Event Listeners
+document.getElementById('fileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        document.getElementById('fileInfo').textContent = file.name;
+        loadPdf(file);
+    }
+});
+
+document.querySelectorAll('.tool-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeTool = btn.dataset.tool;
+    });
+});
+
+document.getElementById('savePdf').addEventListener('click', async () => {
+    if (!currentPdfDoc) return;
+    
+    // PDF-Lib modification example
+    const pdfBytes = await currentPdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    
+    // Save functionality
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'edited-document.pdf';
+    link.click();
+});
+
+// Annotation System
+function handleCanvasClick(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    switch(activeTool) {
+        case 'text':
+            createTextAnnotation(x, y);
+            break;
+        case 'draw':
+            startDrawing(x, y);
+            break;
+        // Add other tool cases
     }
 }
 
-// Toolbar button functionality
-document.querySelectorAll('.toolbarButton').forEach(button => {
-    button.addEventListener('click', function() {
-        const tool = this.id;
-        setActiveTool(tool);
+function createTextAnnotation(x, y) {
+    const text = prompt('Enter text:');
+    if (text) {
+        annotations.push({
+            type: 'text',
+            content: text,
+            x,
+            y,
+            page: currentPage,
+            fontSize: document.getElementById('fontSize').value,
+            color: document.getElementById('colorPicker').value
+        });
+        redrawAnnotations();
+    }
+}
+
+function redrawAnnotations() {
+    const canvas = document.getElementById('pdfCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Clear existing annotations
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Redraw PDF page
+    renderPage(currentPage);
+    
+    // Draw annotations
+    annotations.filter(a => a.page === currentPage).forEach(ann => {
+        if (ann.type === 'text') {
+            ctx.fillStyle = ann.color;
+            ctx.font = `${ann.fontSize}px Arial`;
+            ctx.fillText(ann.content, ann.x, ann.y);
+        }
     });
-});
-
-function setActiveTool(tool) {
-    activeTool = tool;
-    // Update UI to show active tool
-    document.querySelectorAll('.toolbarButton').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.getElementById(tool).classList.add('active');
 }
 
-// Basic annotation functions
-function createTextAnnotation() {
-    // Implementation for text annotation
-}
-
-function createHighlightAnnotation() {
-    // Implementation for highlight annotation
-}
-
-function createUnderlineAnnotation() {
-    // Implementation for underline annotation
-}
-
-function createStrikethroughAnnotation() {
-    // Implementation for strikethrough annotation
-}
-
-function createBoxAnnotation() {
-    // Implementation for box annotation
-}
-
-function createCircleAnnotation() {
-    // Implementation for circle annotation
-}
-
-// Document actions
-function saveDocument() {
-    // Implementation for save functionality
-}
-
-function downloadPdf() {
-    // Implementation for download functionality
-}
-
-function printDocument() {
-    // Implementation for print functionality
-}
-
-function undoAction() {
-    // Implementation for undo functionality
-}
-
-function redoAction() {
-    // Implementation for redo functionality
-}
-
-function showSignatureModal() {
-    // Implementation for signature modal
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    // Any initialization code
-});
+// Initialization
+document.getElementById('pdfCanvas').addEventListener('click', handleCanvasClick);
