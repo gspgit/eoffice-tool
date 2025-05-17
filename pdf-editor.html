@@ -5,13 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Editor - PDF Toolkit</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
-    <!-- PDF.js for rendering -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js"></script>
+    <link rel="stylesheet" href="css/pdf-editor.css">
 </head>
 <body>
-    <!-- Header -->
     <header class="main-header">
         <div class="header-container">
             <a href="/" class="logo">
@@ -25,70 +21,134 @@
         </div>
     </header>
 
-    <!-- PDF Editor Interface -->
     <main class="tool-interface">
         <div class="tool-header">
             <h1><i class="fas fa-edit"></i> PDF Editor</h1>
             <p class="tool-description">Edit PDF documents directly in your browser</p>
         </div>
 
-        <!-- Editor Container -->
+        <div id="toolbarAnnotations" class="pdf-toolbar">
+            <a id="pdfToolkitLogoAnchor" href="/" class="setCulture light-mode" style="cursor: pointer;" data-tracker="true">
+                <img class="light-mode" src="assets/logo.png" id="logo" data-tracker="true">
+            </a>
+            
+            <div id="toolbarViewerRight">
+                <button id="summarizer" class="summarize-style toolbarButton show-tutorial-button hiddenSmallView" type="button" onclick="summarizeDocument();return false;" tabindex="33">
+                    <img src="assets/icons/summarize-icon.svg" width="16" height="16">
+                    <span class="hidden-sm ultrabtntext ultra">Summarizer</span>
+                </button>
+
+                <div class="dropDownButton">
+                    <button id="sends" class="toolbarButton annotation" title="e-Signature" onclick="showSendChooser(this);return false;">
+                        <img src="assets/icons/share.svg" width="16" height="16">
+                        <span class="hidden-sm ultrabtntext ultra">Send</span>
+                    </button>
+                    <ul id="sendList" class="dropDownButton-content">
+                        <li>
+                            <button id="forsign" class="toolbarButton annotation" title="Add E-Signature(s)" data-bs-toggle="modal" data-bs-target="#signModal">
+                                <img src="assets/icons/digital_signature.svg" width="16" height="16">
+                                <span class="ultrabtntext ultra">Add E-Signature(s)</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="separator"></div>
+                
+                <button id="download" class="toolbarButton annotation exportact" title="Download" onclick="downloadPdf();return false;">
+                    <img src="assets/icons/download.svg" width="16" height="16">
+                    <span class="d-none d-md-block ultrabtntext ultra">Download</span>
+                </button>
+
+                <button id="print" class="toolbarButton exportact" title="Print" onclick="printDocument();return false;">
+                    <img src="assets/icons/print.svg" width="16" height="16">
+                    <span class="hidden-sm ultrabtntext ultra">Print</span>
+                </button>
+
+                <button id="save" class="toolbarButton exportact" title="Save All Annotations" onclick="saveDocument();return false;">
+                    <img src="assets/icons/save.svg" width="16" height="16">
+                    <span class="hidden-sm ultrabtntext ultra">Save</span>
+                </button>
+            </div>
+
+            <div id="toolbarAnnotationsMiddle">
+                <div class="hori-scroller">
+                    <button id="text" class="toolbarButton annotation toggled" title="Free Text" onclick="createTextAnnotation();return false;">
+                        <img src="assets/icons/text.svg" width="16" height="16">
+                        <span class="hidden-xs ultrabtntext ultra">Text</span>
+                    </button>
+
+                    <button id="textHighlight" class="toolbarButton annotation" title="Text Highlight" onclick="createHighlightAnnotation();return false;">
+                        <img src="assets/icons/text_highlight.svg" width="16" height="16">
+                        <span class="hidden-xs ultrabtntext ultra">Highlight</span>
+                    </button>
+
+                    <button id="textUnderline" class="toolbarButton annotation" title="Text Underline" onclick="createUnderlineAnnotation();return false;">
+                        <img src="assets/icons/text_underline.svg" width="16" height="16">
+                        <span class="hidden-xs ultrabtntext ultra">Underline</span>
+                    </button>
+
+                    <button id="textStrikeThrough" class="toolbarButton annotation" title="Text Strikethrough" onclick="createStrikethroughAnnotation();return false;">
+                        <img src="assets/icons/text_strike_through.svg" width="16" height="16">
+                        <span class="hidden-xs ultrabtntext ultra">Strikeout</span>
+                    </button>
+
+                    <div class="dropDownButton">
+                        <button id="shapes" class="toolbarButton annotation" title="Shapes" onclick="showShapeChooser();return false;">
+                            <img src="assets/icons/box.svg" width="16" height="16">
+                            <span class="hidden-xs ultrabtntext ultra">Shapes</span>
+                        </button>
+                        <ul id="shapeList" class="dropDownButton-content">
+                            <li>
+                                <button id="box" class="toolbarButton annotation" title="Box" onclick="createBoxAnnotation();return false;">
+                                    <img src="assets/icons/box.svg" width="16" height="16">
+                                    <span class="ultrabtntext ultra">Box</span>
+                                </button>
+                            </li>
+                            <li>
+                                <button id="circle" class="toolbarButton annotation" title="Circle" onclick="createCircleAnnotation();return false;">
+                                    <img src="assets/icons/circle.svg" width="16" height="16">
+                                    <span class="ultrabtntext ultra">Circle</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <button id="digital_signature" class="toolbarButton annotation" title="Digital Signature" onclick="showSignatureModal();return false;">
+                        <img src="assets/icons/digital_signature.svg" width="16" height="16">
+                        <span class="hidden-xs ultrabtntext ultra">Signature</span>
+                    </button>
+
+                    <button id="undoBtn" class="toolbarButton" title="Undo" onclick="undoAction();return false;">
+                        <img src="assets/icons/undo.svg" width="16" height="16">
+                        <span class="hidden-xs ultrabtntext ultra">Undo</span>
+                    </button>
+
+                    <button id="redoBtn" class="toolbarButton" title="Redo" onclick="redoAction();return false;">
+                        <img src="assets/icons/redo.svg" width="16" height="16">
+                        <span class="hidden-xs ultrabtntext ultra">Redo</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="editor-container">
-            <!-- File Upload Section -->
             <div class="upload-section">
                 <div class="drop-zone" id="dropZone">
                     <div class="drop-content">
                         <i class="fas fa-file-upload"></i>
-                        <h3>Select PDF file or drag here to edit</h3>
+                        <h3>Select PDF file to edit</h3>
                         <input type="file" id="fileInput" accept=".pdf" hidden>
-                        <button class="btn-select" onclick="document.getElementById('fileInput').click()">
-                            Choose File
-                        </button>
+                        <button class="btn-select">Choose File</button>
                     </div>
                     <div class="file-info" id="fileInfo"></div>
                 </div>
             </div>
 
-            <!-- Editing Tools -->
             <div class="editor-tools">
-                <!-- Left Toolbar -->
-                <div class="toolbar">
-                    <button class="tool-btn active" data-tool="select">
-                        <i class="fas fa-mouse-pointer"></i>
-                        <span>Select</span>
-                    </button>
-                    <button class="tool-btn" data-tool="text">
-                        <i class="fas fa-font"></i>
-                        <span>Text</span>
-                    </button>
-                    <button class="tool-btn" data-tool="highlight">
-                        <i class="fas fa-highlighter"></i>
-                        <span>Highlight</span>
-                    </button>
-                    <button class="tool-btn" data-tool="draw">
-                        <i class="fas fa-pencil-alt"></i>
-                        <span>Draw</span>
-                    </button>
-                    <button class="tool-btn" data-tool="shape">
-                        <i class="fas fa-shapes"></i>
-                        <span>Shapes</span>
-                    </button>
-                    <button class="tool-btn" data-tool="image">
-                        <i class="fas fa-image"></i>
-                        <span>Image</span>
-                    </button>
-                    <button class="tool-btn" data-tool="erase">
-                        <i class="fas fa-eraser"></i>
-                        <span>Erase</span>
-                    </button>
-                </div>
-
-                <!-- Canvas Container -->
                 <div class="canvas-container">
                     <canvas id="pdfCanvas"></canvas>
                 </div>
-
-                <!-- Right Panel -->
                 <div class="right-panel">
                     <div class="page-thumbnails" id="pageThumbnails"></div>
                     <div class="properties-panel">
@@ -101,29 +161,11 @@
                             <label>Color</label>
                             <input type="color" id="colorPicker" value="#000000">
                         </div>
-                        <div class="property-group">
-                            <label>Opacity</label>
-                            <input type="range" id="opacity" min="0" max="1" step="0.1" value="1">
-                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="editor-actions">
-                <button class="btn-primary" onclick="savePDF()">
-                    <i class="fas fa-save"></i> Save PDF
-                </button>
-                <button class="btn-secondary" onclick="clearAnnotations()">
-                    Clear Changes
-                </button>
-                <button class="btn-secondary" onclick="downloadPDF()">
-                    <i class="fas fa-download"></i> Download
-                </button>
-            </div>
         </div>
 
-        <!-- Instructions -->
         <div class="instructions">
             <h3>How to Edit PDFs:</h3>
             <ol>
@@ -135,14 +177,15 @@
             </ol>
         </div>
     </main>
-    <!-- Scripts -->
-    <script src="js/main.js"></script>
-    <script src="js/pdf-editor.js"></script>
-    <!-- Footer -->
+
     <footer class="main-footer">
         <div class="footer-container">
-            <p>© 2025 PDF Toolkit. All rights reserved.</p>
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
         </div>
     </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="js/pdf-editor.js"></script>
 </body>
 </html>
