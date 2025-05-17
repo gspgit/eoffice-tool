@@ -1,18 +1,11 @@
-/* tools-style.css */
+/* Combined CSS for Kruti Dev Converter Tool */
 
-/* Base styles */
-* {
+/* Base styles from default.css */
+body {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-}
-
-body.converter-body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
-    background: #f0f2f5;
-    color: #333;
-    min-height: 100vh;
 }
 
 #wrapper {
@@ -21,37 +14,38 @@ body.converter-body {
     padding: 20px;
 }
 
-/* Header styles */
+/* Color scheme from color.css */
+.bg-red-grad {
+    background: linear-gradient(45deg, #c31432, #240b36);
+    color: white;
+}
+
+.text-light {
+    color: #ffffff;
+}
+
+.text-shadow {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Tool specific styles from tools-style.css */
+.converter-body {
+    background-color: #f5f5f5;
+    min-height: 100vh;
+}
+
 #header {
-    background: linear-gradient(135deg, #c0392b, #e74c3c);
-    padding: 1rem;
-    border-radius: 5px;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-#top-heading {
     text-align: center;
-    font-size: 1.8rem;
-    margin-bottom: 0;
+    padding: 20px 0;
 }
 
-/* Converter Form Layout */
-#converterForm {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+#legacyContainer, #unicodeContainer {
+    width: 48%;
+    display: inline-block;
+    vertical-align: top;
+    margin: 10px;
 }
 
-#legacyContainer,
-#unicodeContainer {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    overflow: hidden;
-}
-
-/* Textarea styling */
 textarea {
     width: 100%;
     padding: 15px;
@@ -59,53 +53,34 @@ textarea {
     border-radius: 5px;
     resize: vertical;
     min-height: 300px;
-    font-size: 18px;
-    line-height: 1.5;
+    font-size: 16px;
 }
 
-textarea:focus {
-    border-color: #c0392b;
-    outline: none;
-    box-shadow: 0 0 5px rgba(192, 57, 43, 0.3);
-}
+/* Converter specific styles from converter-tools.css */
+.pl-2 { padding-left: 0.5rem; }
+.mr-3 { margin-right: 1rem; }
+.w3-large { font-size: 1.2em; }
+.float-right { float: right; }
+.c-p { cursor: pointer; }
 
-/* Button styles */
-.bg-red-grad {
-    background: linear-gradient(135deg, #c0392b, #e74c3c);
-}
-
-.btn-primary {
-    background-color: #c0392b;
-    border: none;
-    padding: 10px 25px;
-    transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-    background-color: #e74c3c;
-    transform: translateY(-2px);
-}
-
-/* Tooltip styles */
 .tooltip1 {
     position: relative;
-    cursor: pointer;
     display: inline-block;
 }
 
 .tooltip1 .bottom {
     visibility: hidden;
-    width: 60px;
-    background: #333;
+    width: 120px;
+    background-color: #555;
     color: #fff;
     text-align: center;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 5px;
     position: absolute;
     z-index: 1;
     bottom: 125%;
     left: 50%;
-    margin-left: -30px;
+    margin-left: -60px;
     opacity: 0;
     transition: opacity 0.3s;
 }
@@ -115,40 +90,40 @@ textarea:focus {
     opacity: 1;
 }
 
-/* Loading indicator */
+.btn-primary {
+    background-color: #c31432;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #240b36;
+}
+
+/* Loading animation */
 #loadDiv1, #loadDiv2 {
-    position: relative;
-    height: 50px;
+    position: absolute;
+    z-index: 1000;
+    background: rgba(255,255,255,0.9);
+}
+
+/* Font specific styles */
+.h-f {
+    font-family: 'Kruti Dev 010', 'Mangal', sans-serif;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-    #converterForm {
-        grid-template-columns: 1fr;
-    }
-    
-    #top-heading {
-        font-size: 1.4rem;
+    #legacyContainer, #unicodeContainer {
+        width: 100%;
+        margin: 10px 0;
     }
     
     textarea {
         min-height: 200px;
-        font-size: 16px;
-    }
-}
-
-@media (max-width: 480px) {
-    #wrapper {
-        padding: 10px;
-    }
-    
-    .btn-primary {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-    
-    .float-right {
-        float: none !important;
-        display: inline-block;
     }
 }
