@@ -1,21 +1,4 @@
 /* Combined CSS for Kruti Dev Converter Tool */
-/* Base styles and background */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f0f2f5; /* Page background color */
-}
-
-#wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #ffffff; /* Content area background */
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    border-radius: 8px;
-}
 /* Base styles from default.css */
 body {
     margin: 0;
@@ -46,7 +29,7 @@ body {
 
 /* Tool specific styles from tools-style.css */
 .converter-body {
-    background-color: #f5f5f5;
+    background-color: #876f6d;
     min-height: 100vh;
 }
 
