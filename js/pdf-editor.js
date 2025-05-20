@@ -200,10 +200,50 @@ function clearAnnotations() {
   renderPage(currentPage);
 }
 
-function savePDF() {
-  alert("Save feature requires server-side logic or PDF-lib to embed annotations.");
+// Document Actions
+async function savePDF() {
+    if (!currentPdfDoc) {
+        alert('No PDF loaded');
+        return;
+    }
+    
+    try {
+        showLoading(true);
+        // Using PDF-Lib to save with annotations
+        const { PDFDocument, rgb } = PDFLib;
+        
+        const existingPdfBytes = await currentPdfDoc.getData();
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        const pages = pdfDoc.getPages();
+        
+        // Here you would add code to draw annotations into the PDF
+        // This is simplified - you'd need to implement proper PDF annotation creation
+        
+        const modifiedPdfBytes = await pdfDoc.save();
+        const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+        
+        // For now, we'll just save the original with a note that annotations aren't embedded
+        alert('Note: In this demo, annotations are not saved into the PDF file. For full functionality, implement PDF annotation creation with PDF-Lib.');
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'edited-document.pdf';
+        link.click();
+        showLoading(false);
+    } catch (error) {
+        showLoading(false);
+        console.error('Error saving PDF:', error);
+        alert('Error saving PDF: ' + error.message);
+    }
 }
 
 function downloadPDF() {
-  alert("Use PDF-lib to render annotations into downloadable PDF.");
+    if (!currentPdfDoc) {
+        alert('No PDF loaded');
+        return;
+    }
+    
+    // Similar to save but might implement different behavior
+    savePDF();
 }
+
