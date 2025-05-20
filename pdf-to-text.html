@@ -69,12 +69,23 @@
                     Clear File
                 </button>
             </div>
-        </div>
 
-        <!-- Conversion Notice -->
-        <div class="conversion-notice">
-            <i class="fas fa-info-circle"></i>
-            <p>Note: Text formatting will be minimal. Only plain content will be extracted.</p>
+            <!-- Progress Info -->
+            <div id="progressInfo" class="conversion-progress"></div>
+
+            <!-- Extracted Text Editor -->
+            <div class="extracted-text">
+                <h3>Extracted Text Editor:</h3>
+                <textarea id="outputText" class="output-textarea" rows="20" placeholder="Extracted text will appear here..."></textarea>
+                
+                <button class="btn-secondary" onclick="copyToClipboard()">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+                
+                <button class="btn-primary" onclick="downloadEditedText()">
+                    <i class="fas fa-download"></i> Download Edited Text
+                </button>
+            </div>
         </div>
 
         <!-- Instructions -->
@@ -84,7 +95,8 @@
                 <li>Upload your PDF document</li>
                 <li>Choose conversion options</li>
                 <li>Click "Convert to Text"</li>
-                <li>Download the extracted text file</li>
+                <li>Edit or copy the text</li>
+                <li>Download the final version</li>
             </ol>
         </div>
     </main>
@@ -97,8 +109,12 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.0.375/pdf.min.js"></script>
-    <script src="js/main.js"></script>
+<!-- Use matching versions (3.4.120 for both) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+</script>
+
     <script src="js/pdf-to-text.js"></script>
 </body>
 </html>
