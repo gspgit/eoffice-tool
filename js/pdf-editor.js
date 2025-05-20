@@ -2,197 +2,159 @@
 
 let pdfDoc = null;
 let currentPage = 1;
+let totalPages = 0;
 let scale = 1.5;
-let canvas = document.getElementById("pdfCanvas");
-let ctx = canvas.getContext("2d");
-let annotations = {}; // Store per-page annotations
-let currentTool = "select";
-let drawing = false;
-let startX, startY;
+let annotations = {};
+let activeTool = 'select';
+let canvas = document.getElementById('pdfCanvas');
+let ctx = canvas.getContext('2d');
+let colorPicker = document.getElementById('colorPicker');
+let fontSizeInput = document.getElementById('fontSize');
+let opacityInput = document.getElementById('opacity');
 
-const fileInput = document.getElementById("fileInput");
-const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById('fileInput');
+fileInput.addEventListener('change', handleFile);
 
-// Load PDF file
-fileInput.addEventListener("change", (e) => {
+document.querySelectorAll('.tool-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTool = btn.dataset.tool;
+  });
+});
+
+function handleFile(e) {
   const file = e.target.files[0];
-  if (file && file.type === "application/pdf") {
+  if (file && file.type === 'application/pdf') {
     const fileReader = new FileReader();
     fileReader.onload = function () {
       const typedarray = new Uint8Array(this.result);
-      pdfjsLib.getDocument(typedarray).promise.then((doc) => {
-        pdfDoc = doc;
+      pdfjsLib.getDocument(typedarray).promise.then(function (pdf) {
+        pdfDoc = pdf;
+        totalPages = pdf.numPages;
+        currentPage = 1;
         annotations = {}; // Reset annotations
         renderPage(currentPage);
+        renderThumbnails();
       });
     };
     fileReader.readAsArrayBuffer(file);
   }
-});
+}
 
-// Drag and Drop
-["dragover", "drop"].forEach((evt) => {
-  dropZone.addEventListener(evt, (e) => {
-    e.preventDefault();
-    if (evt === "drop") {
-      fileInput.files = e.dataTransfer.files;
-      fileInput.dispatchEvent(new Event("change"));
-    }
-  });
-});
-
-function renderPage(pageNum) {
-  pdfDoc.getPage(pageNum).then((page) => {
-    const viewport = page.getViewport({ scale });
+function renderPage(pageNumber) {
+  pdfDoc.getPage(pageNumber).then(function (page) {
+    const viewport = page.getViewport({ scale: scale });
     canvas.width = viewport.width;
     canvas.height = viewport.height;
 
     const renderContext = {
       canvasContext: ctx,
-      viewport: viewport,
+      viewport: viewport
     };
-
     page.render(renderContext).promise.then(() => {
-      drawAnnotations(pageNum);
+      drawAnnotations(pageNumber);
     });
   });
 }
 
-function drawAnnotations(pageNum) {
-  if (!annotations[pageNum]) return;
-  annotations[pageNum].forEach((ann) => {
+function drawAnnotations(pageNumber) {
+  if (!annotations[pageNumber]) return;
+  annotations[pageNumber].forEach(ann => {
     ctx.globalAlpha = ann.opacity || 1;
-    ctx.strokeStyle = ann.color || "#000";
-    ctx.fillStyle = ann.color || "#000";
+    ctx.fillStyle = ann.color || '#000';
+    ctx.strokeStyle = ann.color || '#000';
     ctx.lineWidth = 2;
     switch (ann.type) {
-      case "text":
-        ctx.font = `${ann.size || 12}px Arial`;
+      case 'text':
+        ctx.font = `${ann.size}px sans-serif`;
         ctx.fillText(ann.text, ann.x, ann.y);
         break;
-      case "highlight":
-        ctx.fillStyle = ann.color || "yellow";
-        ctx.globalAlpha = 0.4;
-        ctx.fillRect(ann.x, ann.y, ann.w, ann.h);
-        break;
-      case "draw":
+      case 'draw':
         ctx.beginPath();
-        ctx.moveTo(ann.path[0].x, ann.path[0].y);
-        ann.path.forEach((pt) => ctx.lineTo(pt.x, pt.y));
+        ctx.moveTo(ann.points[0].x, ann.points[0].y);
+        ann.points.forEach(p => ctx.lineTo(p.x, p.y));
         ctx.stroke();
-        break;
-      case "rect":
-        ctx.strokeRect(ann.x, ann.y, ann.w, ann.h);
-        break;
-      case "image":
-        const img = new Image();
-        img.src = ann.src;
-        img.onload = () => ctx.drawImage(img, ann.x, ann.y, ann.w, ann.h);
         break;
     }
     ctx.globalAlpha = 1;
   });
 }
 
-// Tool selection
-const toolButtons = document.querySelectorAll(".tool-btn");
-toolButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelector(".tool-btn.active")?.classList.remove("active");
-    btn.classList.add("active");
-    currentTool = btn.dataset.tool;
-  });
-});
+canvas.addEventListener('mousedown', onMouseDown);
+let drawing = false;
+let drawPoints = [];
+function onMouseDown(e) {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
 
-canvas.addEventListener("mousedown", (e) => {
-  if (currentTool === "draw" || currentTool === "highlight" || currentTool === "rect") {
-    drawing = true;
-    startX = e.offsetX;
-    startY = e.offsetY;
-    if (currentTool === "draw") {
-      currentPath = [{ x: startX, y: startY }];
-    }
-  } else if (currentTool === "text") {
-    const text = prompt("Enter text:");
-    if (text) {
-      addAnnotation({ type: "text", x: e.offsetX, y: e.offsetY, text, size: getFontSize(), color: getColor(), opacity: getOpacity() });
-      renderPage(currentPage);
-    }
-  } else if (currentTool === "image") {
-    const imgInput = document.createElement("input");
-    imgInput.type = "file";
-    imgInput.accept = "image/*";
-    imgInput.onchange = (event) => {
-      const imgFile = event.target.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        addAnnotation({ type: "image", x: e.offsetX, y: e.offsetY, src: reader.result, w: 100, h: 100 });
-        renderPage(currentPage);
-      };
-      reader.readAsDataURL(imgFile);
-    };
-    imgInput.click();
-  } else if (currentTool === "erase") {
-    eraseAnnotationAt(e.offsetX, e.offsetY);
-    renderPage(currentPage);
-  }
-});
-
-canvas.addEventListener("mousemove", (e) => {
-  if (!drawing) return;
-  if (currentTool === "draw") {
-    currentPath.push({ x: e.offsetX, y: e.offsetY });
-    renderPage(currentPage);
-  }
-});
-
-canvas.addEventListener("mouseup", (e) => {
-  if (!drawing) return;
-  drawing = false;
-  if (currentTool === "draw") {
-    addAnnotation({ type: "draw", path: currentPath, color: getColor(), opacity: getOpacity() });
-  } else if (currentTool === "highlight") {
-    const w = e.offsetX - startX;
-    const h = e.offsetY - startY;
-    addAnnotation({ type: "highlight", x: startX, y: startY, w, h, color: getColor(), opacity: getOpacity() });
-  } else if (currentTool === "rect") {
-    const w = e.offsetX - startX;
-    const h = e.offsetY - startY;
-    addAnnotation({ type: "rect", x: startX, y: startY, w, h, color: getColor(), opacity: getOpacity() });
-  }
-  renderPage(currentPage);
-});
-
-function addAnnotation(ann) {
   if (!annotations[currentPage]) annotations[currentPage] = [];
-  annotations[currentPage].push(ann);
+
+  switch (activeTool) {
+    case 'text':
+      const text = prompt('Enter text:');
+      if (text) {
+        annotations[currentPage].push({
+          type: 'text',
+          text,
+          x, y,
+          color: colorPicker.value,
+          size: parseInt(fontSizeInput.value),
+          opacity: parseFloat(opacityInput.value)
+        });
+        renderPage(currentPage);
+      }
+      break;
+    case 'draw':
+      drawing = true;
+      drawPoints = [{ x, y }];
+      canvas.addEventListener('mousemove', onMouseMove);
+      canvas.addEventListener('mouseup', onMouseUp);
+      break;
+  }
 }
 
-function eraseAnnotationAt(x, y) {
-  const pageAnnotations = annotations[currentPage] || [];
-  annotations[currentPage] = pageAnnotations.filter((ann) => {
-    if (ann.type === "text") {
-      const textWidth = ctx.measureText(ann.text).width;
-      return !(x > ann.x && x < ann.x + textWidth && y > ann.y - 12 && y < ann.y);
-    } else if (ann.type === "highlight" || ann.type === "rect" || ann.type === "image") {
-      return !(x > ann.x && x < ann.x + ann.w && y > ann.y && y < ann.y + ann.h);
-    } else if (ann.type === "draw") {
-      return true; // Skip for now unless point-in-path detection is implemented
-    }
-    return true;
+function onMouseMove(e) {
+  if (!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  drawPoints.push({ x, y });
+  renderPage(currentPage);
+  ctx.beginPath();
+  ctx.moveTo(drawPoints[0].x, drawPoints[0].y);
+  drawPoints.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.strokeStyle = colorPicker.value;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function onMouseUp() {
+  drawing = false;
+  annotations[currentPage].push({
+    type: 'draw',
+    points: drawPoints,
+    color: colorPicker.value,
+    opacity: parseFloat(opacityInput.value)
   });
+  canvas.removeEventListener('mousemove', onMouseMove);
+  canvas.removeEventListener('mouseup', onMouseUp);
+  renderPage(currentPage);
 }
 
-function getFontSize() {
-  return parseInt(document.getElementById("fontSize").value);
-}
-
-function getColor() {
-  return document.getElementById("colorPicker").value;
-}
-
-function getOpacity() {
-  return parseFloat(document.getElementById("opacity").value);
+function renderThumbnails() {
+  const thumbs = document.getElementById('pageThumbnails');
+  thumbs.innerHTML = '';
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = `Page ${i}`;
+    btn.addEventListener('click', () => {
+      currentPage = i;
+      renderPage(currentPage);
+    });
+    thumbs.appendChild(btn);
+  }
 }
 
 function clearAnnotations() {
@@ -200,50 +162,67 @@ function clearAnnotations() {
   renderPage(currentPage);
 }
 
-// Document Actions
 async function savePDF() {
-    if (!currentPdfDoc) {
-        alert('No PDF loaded');
-        return;
+  const existingPdfBytes = await pdfDoc.save();
+  const pdfLib = await import('https://cdn.skypack.dev/pdf-lib');
+  const { PDFDocument, rgb } = pdfLib;
+
+  const newPdfDoc = await PDFDocument.load(existingPdfBytes);
+
+  for (let i = 1; i <= totalPages; i++) {
+    const page = newPdfDoc.getPage(i - 1);
+    const { width, height } = page.getSize();
+
+    if (annotations[i]) {
+      annotations[i].forEach(ann => {
+        const color = hexToRgb(ann.color);
+        switch (ann.type) {
+          case 'text':
+            page.drawText(ann.text, {
+              x: ann.x,
+              y: height - ann.y,
+              size: ann.size,
+              color: rgb(color.r / 255, color.g / 255, color.b / 255),
+              opacity: ann.opacity
+            });
+            break;
+          case 'draw':
+            for (let j = 0; j < ann.points.length - 1; j++) {
+              const p1 = ann.points[j];
+              const p2 = ann.points[j + 1];
+              page.drawLine({
+                start: { x: p1.x, y: height - p1.y },
+                end: { x: p2.x, y: height - p2.y },
+                thickness: 2,
+                color: rgb(color.r / 255, color.g / 255, color.b / 255),
+                opacity: ann.opacity
+              });
+            }
+            break;
+        }
+      });
     }
-    
-    try {
-        showLoading(true);
-        // Using PDF-Lib to save with annotations
-        const { PDFDocument, rgb } = PDFLib;
-        
-        const existingPdfBytes = await currentPdfDoc.getData();
-        const pdfDoc = await PDFDocument.load(existingPdfBytes);
-        const pages = pdfDoc.getPages();
-        
-        // Here you would add code to draw annotations into the PDF
-        // This is simplified - you'd need to implement proper PDF annotation creation
-        
-        const modifiedPdfBytes = await pdfDoc.save();
-        const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
-        
-        // For now, we'll just save the original with a note that annotations aren't embedded
-        alert('Note: In this demo, annotations are not saved into the PDF file. For full functionality, implement PDF annotation creation with PDF-Lib.');
-        
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'edited-document.pdf';
-        link.click();
-        showLoading(false);
-    } catch (error) {
-        showLoading(false);
-        console.error('Error saving PDF:', error);
-        alert('Error saving PDF: ' + error.message);
-    }
+  }
+
+  const pdfBytes = await newPdfDoc.save();
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'annotated.pdf';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function hexToRgb(hex) {
+  const bigint = parseInt(hex.slice(1), 16);
+  return {
+    r: (bigint >> 16) & 255,
+    g: (bigint >> 8) & 255,
+    b: bigint & 255
+  };
 }
 
 function downloadPDF() {
-    if (!currentPdfDoc) {
-        alert('No PDF loaded');
-        return;
-    }
-    
-    // Similar to save but might implement different behavior
-    savePDF();
+  savePDF();
 }
-
