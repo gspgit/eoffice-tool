@@ -1,4 +1,4 @@
-// PDF Editor Logic with Full Annotation Features and More Shapes
+// PDF Editor Logic with Full Annotation Features + Shapes (Rectangle, Circle, Ellipse, Line, Arrow, Polygon)
 
 const fileInput = document.getElementById("fileInput");
 const pdfCanvas = document.getElementById("pdfCanvas");
@@ -15,7 +15,7 @@ let currentTool = "select";
 let drawing = false;
 let drawPath = [];
 let startX = 0, startY = 0;
-let currentShape = "rect"; // default shape
+let shapeMode = "rect"; // Default shape
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js";
@@ -42,13 +42,7 @@ document.querySelectorAll(".tool-btn").forEach((btn) => {
     btn.classList.add("active");
     currentTool = btn.dataset.tool;
     if (currentTool === "shape") {
-      const shape = prompt("Enter shape type: rect, circle, ellipse, line", "rect");
-      if (["rect", "circle", "ellipse", "line"].includes(shape)) {
-        currentShape = shape;
-      } else {
-        alert("Invalid shape selected. Defaulting to rectangle.");
-        currentShape = "rect";
-      }
+      shapeMode = prompt("Enter shape type: rect, circle, ellipse, line, arrow, polygon", "rect");
     }
   });
 });
@@ -118,28 +112,28 @@ pdfCanvas.addEventListener("mouseup", () => {
         page: currentPageIndex,
       });
     } else if (currentTool === "shape") {
-      const endX = drawPath[drawPath.length - 1].x;
-      const endY = drawPath[drawPath.length - 1].y;
-      const shapeAnno = {
-        type: currentShape,
+      const end = drawPath[drawPath.length - 1];
+      const shape = {
+        type: shapeMode,
         x: startX,
         y: startY,
-        width: endX - startX,
-        height: endY - startY,
+        width: end.x - startX,
+        height: end.y - startY,
+        path: drawPath,
         color: colorPicker.value,
         opacity: opacityInput.value,
         page: currentPageIndex,
       };
-      addAnnotation(shapeAnno);
+      addAnnotation(shape);
     } else if (currentTool === "erase") {
       if (annotations[currentPageIndex]) {
-        annotations[currentPageIndex] = annotations[currentPageIndex].filter((a) => {
-          if (a.type === "text" && Math.abs(a.x - startX) < 20 && Math.abs(a.y - startY) < 20) return false;
-          if (["draw", "highlight"].includes(a.type)) {
-            return !a.path.some((p) => Math.abs(p.x - startX) < 10 && Math.abs(p.y - startY) < 10);
+        annotations[currentPageIndex] = annotations[currentPageIndex].filter(
+          (a) => {
+            if (a.type === "text" && Math.abs(a.x - startX) < 20 && Math.abs(a.y - startY) < 20) return false;
+            if (a.path && a.path.some((p) => Math.abs(p.x - startX) < 10 && Math.abs(p.y - startY) < 10)) return false;
+            return true;
           }
-          return true;
-        });
+        );
       }
     }
     renderPage(currentPageIndex);
@@ -156,37 +150,60 @@ async function renderPage(index) {
   const viewport = page.getViewport({ scale: 1.5 });
   pdfCanvas.width = viewport.width;
   pdfCanvas.height = viewport.height;
-  const renderContext = { canvasContext: ctx, viewport };
+
+  const renderContext = {
+    canvasContext: ctx,
+    viewport: viewport,
+  };
   await page.render(renderContext).promise;
 
   if (annotations[index]) {
     annotations[index].forEach((a) => {
       ctx.globalAlpha = a.opacity || 1;
-      ctx.fillStyle = ctx.strokeStyle = a.color || "black";
+      ctx.fillStyle = a.color || "black";
+      ctx.strokeStyle = a.color || "black";
       ctx.lineWidth = a.size || 2;
+
       if (a.type === "text") {
         ctx.font = `${a.size}px sans-serif`;
         ctx.fillText(a.value, a.x, a.y);
-      } else if (["draw", "highlight"].includes(a.type)) {
+      } else if (a.type === "draw" || a.type === "highlight") {
         ctx.beginPath();
         ctx.moveTo(a.path[0].x, a.path[0].y);
         a.path.forEach((p) => ctx.lineTo(p.x, p.y));
         ctx.stroke();
       } else if (a.type === "rect") {
         ctx.strokeRect(a.x, a.y, a.width, a.height);
-      } else if (a.type === "line") {
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(a.x + a.width, a.y + a.height);
-        ctx.stroke();
       } else if (a.type === "circle") {
-        ctx.beginPath();
         const radius = Math.sqrt(a.width ** 2 + a.height ** 2) / 2;
+        ctx.beginPath();
         ctx.arc(a.x + a.width / 2, a.y + a.height / 2, radius, 0, 2 * Math.PI);
         ctx.stroke();
       } else if (a.type === "ellipse") {
         ctx.beginPath();
-        ctx.ellipse(a.x + a.width / 2, a.y + a.height / 2, Math.abs(a.width / 2), Math.abs(a.height / 2), 0, 0, 2 * Math.PI);
+        ctx.ellipse(a.x + a.width / 2, a.y + a.height / 2, Math.abs(a.width) / 2, Math.abs(a.height) / 2, 0, 0, 2 * Math.PI);
+        ctx.stroke();
+      } else if (a.type === "line" || a.type === "arrow") {
+        const end = { x: a.x + a.width, y: a.y + a.height };
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+        if (a.type === "arrow") {
+          const headlen = 10;
+          const angle = Math.atan2(end.y - a.y, end.x - a.x);
+          ctx.beginPath();
+          ctx.moveTo(end.x, end.y);
+          ctx.lineTo(end.x - headlen * Math.cos(angle - Math.PI / 6), end.y - headlen * Math.sin(angle - Math.PI / 6));
+          ctx.lineTo(end.x - headlen * Math.cos(angle + Math.PI / 6), end.y - headlen * Math.sin(angle + Math.PI / 6));
+          ctx.lineTo(end.x, end.y);
+          ctx.fill();
+        }
+      } else if (a.type === "polygon") {
+        ctx.beginPath();
+        ctx.moveTo(a.path[0].x, a.path[0].y);
+        a.path.slice(1).forEach((p) => ctx.lineTo(p.x, p.y));
+        ctx.closePath();
         ctx.stroke();
       } else if (a.type === "image") {
         const img = new Image();
@@ -205,6 +222,7 @@ document.getElementById("fontSize").addEventListener("input", () => renderPage(c
 window.downloadPDF = async function () {
   const { PDFDocument, rgb } = PDFLib;
   const pdfDocOut = await PDFDocument.load(currentPDF);
+
   for (let i = 0; i < pdfDocOut.getPageCount(); i++) {
     const page = pdfDocOut.getPages()[i];
     const pageAnnots = annotations[i] || [];
@@ -230,6 +248,7 @@ window.downloadPDF = async function () {
       }
     });
   }
+
   const pdfBytes = await pdfDocOut.save();
   const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const link = document.createElement("a");
@@ -244,16 +263,19 @@ function hexToRgb(hex) {
 }
 
 window.savePDF = window.downloadPDF;
+
 window.clearAnnotations = function () {
   annotations[currentPageIndex] = [];
   renderPage(currentPageIndex);
 };
+
 window.nextPage = function () {
   if (currentPageIndex < pdfDoc.numPages - 1) {
     currentPageIndex++;
     renderPage(currentPageIndex);
   }
 };
+
 window.prevPage = function () {
   if (currentPageIndex > 0) {
     currentPageIndex--;
