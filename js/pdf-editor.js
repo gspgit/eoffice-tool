@@ -1,4 +1,4 @@
-// PDF Editor Logic with Full Annotation Features + Undo/Redo, Enhanced Image/Shape Controls, LocalStorage Sync
+// PDF Editor Logic with Full Annotation Features and More Shapes
 
 const fileInput = document.getElementById("fileInput");
 const pdfCanvas = document.getElementById("pdfCanvas");
@@ -11,46 +11,14 @@ let currentPDF = null;
 let currentPageIndex = 0;
 let pdfDoc = null;
 let annotations = {}; // Store per-page annotations
-let undoStack = [];
-let redoStack = [];
 let currentTool = "select";
 let drawing = false;
 let drawPath = [];
 let startX = 0, startY = 0;
+let currentShape = "rect"; // default shape
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js";
-
-function saveState() {
-  undoStack.push(JSON.stringify(annotations));
-  redoStack = [];
-  saveToLocalStorage();
-}
-
-function undo() {
-  if (undoStack.length === 0) return;
-  redoStack.push(JSON.stringify(annotations));
-  annotations = JSON.parse(undoStack.pop());
-  renderPage(currentPageIndex);
-  saveToLocalStorage();
-}
-
-function redo() {
-  if (redoStack.length === 0) return;
-  undoStack.push(JSON.stringify(annotations));
-  annotations = JSON.parse(redoStack.pop());
-  renderPage(currentPageIndex);
-  saveToLocalStorage();
-}
-
-function saveToLocalStorage() {
-  localStorage.setItem("pdfAnnotations", JSON.stringify(annotations));
-}
-
-function loadFromLocalStorage() {
-  const data = localStorage.getItem("pdfAnnotations");
-  if (data) annotations = JSON.parse(data);
-}
 
 fileInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
@@ -61,7 +29,7 @@ fileInput.addEventListener("change", async (e) => {
       pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
       currentPDF = typedArray;
       currentPageIndex = 0;
-      loadFromLocalStorage();
+      annotations = {};
       renderPage(currentPageIndex);
     };
     fileReader.readAsArrayBuffer(file);
@@ -73,6 +41,15 @@ document.querySelectorAll(".tool-btn").forEach((btn) => {
     document.querySelectorAll(".tool-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentTool = btn.dataset.tool;
+    if (currentTool === "shape") {
+      const shape = prompt("Enter shape type: rect, circle, ellipse, line", "rect");
+      if (["rect", "circle", "ellipse", "line"].includes(shape)) {
+        currentShape = shape;
+      } else {
+        alert("Invalid shape selected. Defaulting to rectangle.");
+        currentShape = "rect";
+      }
+    }
   });
 });
 
@@ -85,7 +62,6 @@ pdfCanvas.addEventListener("mousedown", (e) => {
   } else if (currentTool === "text") {
     const text = prompt("Enter text:");
     if (text) {
-      saveState();
       addAnnotation({
         type: "text",
         x: e.offsetX,
@@ -107,13 +83,10 @@ pdfCanvas.addEventListener("mousedown", (e) => {
       if (file) {
         const reader = new FileReader();
         reader.onload = () => {
-          saveState();
           addAnnotation({
             type: "image",
             x: e.offsetX,
             y: e.offsetY,
-            width: 100,
-            height: 100,
             src: reader.result,
             page: currentPageIndex,
           });
@@ -135,7 +108,6 @@ pdfCanvas.addEventListener("mousemove", (e) => {
 pdfCanvas.addEventListener("mouseup", () => {
   if (drawing) {
     drawing = false;
-    saveState();
     if (["draw", "highlight"].includes(currentTool)) {
       addAnnotation({
         type: currentTool,
@@ -148,8 +120,8 @@ pdfCanvas.addEventListener("mouseup", () => {
     } else if (currentTool === "shape") {
       const endX = drawPath[drawPath.length - 1].x;
       const endY = drawPath[drawPath.length - 1].y;
-      addAnnotation({
-        type: "rect",
+      const shapeAnno = {
+        type: currentShape,
         x: startX,
         y: startY,
         width: endX - startX,
@@ -157,18 +129,17 @@ pdfCanvas.addEventListener("mouseup", () => {
         color: colorPicker.value,
         opacity: opacityInput.value,
         page: currentPageIndex,
-      });
+      };
+      addAnnotation(shapeAnno);
     } else if (currentTool === "erase") {
       if (annotations[currentPageIndex]) {
-        annotations[currentPageIndex] = annotations[currentPageIndex].filter(
-          (a) => {
-            if (a.type === "text" && Math.abs(a.x - startX) < 20 && Math.abs(a.y - startY) < 20) return false;
-            if (a.type === "draw" || a.type === "highlight") {
-              return !a.path.some((p) => Math.abs(p.x - startX) < 10 && Math.abs(p.y - startY) < 10);
-            }
-            return true;
+        annotations[currentPageIndex] = annotations[currentPageIndex].filter((a) => {
+          if (a.type === "text" && Math.abs(a.x - startX) < 20 && Math.abs(a.y - startY) < 20) return false;
+          if (["draw", "highlight"].includes(a.type)) {
+            return !a.path.some((p) => Math.abs(p.x - startX) < 10 && Math.abs(p.y - startY) < 10);
           }
-        );
+          return true;
+        });
       }
     }
     renderPage(currentPageIndex);
@@ -185,33 +156,42 @@ async function renderPage(index) {
   const viewport = page.getViewport({ scale: 1.5 });
   pdfCanvas.width = viewport.width;
   pdfCanvas.height = viewport.height;
-
-  const renderContext = {
-    canvasContext: ctx,
-    viewport: viewport,
-  };
+  const renderContext = { canvasContext: ctx, viewport };
   await page.render(renderContext).promise;
 
   if (annotations[index]) {
     annotations[index].forEach((a) => {
       ctx.globalAlpha = a.opacity || 1;
-      ctx.fillStyle = a.color || "black";
-      ctx.strokeStyle = a.color || "black";
+      ctx.fillStyle = ctx.strokeStyle = a.color || "black";
       ctx.lineWidth = a.size || 2;
       if (a.type === "text") {
         ctx.font = `${a.size}px sans-serif`;
         ctx.fillText(a.value, a.x, a.y);
-      } else if (a.type === "draw" || a.type === "highlight") {
+      } else if (["draw", "highlight"].includes(a.type)) {
         ctx.beginPath();
         ctx.moveTo(a.path[0].x, a.path[0].y);
         a.path.forEach((p) => ctx.lineTo(p.x, p.y));
         ctx.stroke();
       } else if (a.type === "rect") {
         ctx.strokeRect(a.x, a.y, a.width, a.height);
+      } else if (a.type === "line") {
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(a.x + a.width, a.y + a.height);
+        ctx.stroke();
+      } else if (a.type === "circle") {
+        ctx.beginPath();
+        const radius = Math.sqrt(a.width ** 2 + a.height ** 2) / 2;
+        ctx.arc(a.x + a.width / 2, a.y + a.height / 2, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+      } else if (a.type === "ellipse") {
+        ctx.beginPath();
+        ctx.ellipse(a.x + a.width / 2, a.y + a.height / 2, Math.abs(a.width / 2), Math.abs(a.height / 2), 0, 0, 2 * Math.PI);
+        ctx.stroke();
       } else if (a.type === "image") {
         const img = new Image();
         img.src = a.src;
-        img.onload = () => ctx.drawImage(img, a.x, a.y, a.width, a.height);
+        img.onload = () => ctx.drawImage(img, a.x, a.y, 100, 100);
       }
     });
     ctx.globalAlpha = 1;
@@ -225,7 +205,6 @@ document.getElementById("fontSize").addEventListener("input", () => renderPage(c
 window.downloadPDF = async function () {
   const { PDFDocument, rgb } = PDFLib;
   const pdfDocOut = await PDFDocument.load(currentPDF);
-
   for (let i = 0; i < pdfDocOut.getPageCount(); i++) {
     const page = pdfDocOut.getPages()[i];
     const pageAnnots = annotations[i] || [];
@@ -251,7 +230,6 @@ window.downloadPDF = async function () {
       }
     });
   }
-
   const pdfBytes = await pdfDocOut.save();
   const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const link = document.createElement("a");
@@ -266,26 +244,19 @@ function hexToRgb(hex) {
 }
 
 window.savePDF = window.downloadPDF;
-
 window.clearAnnotations = function () {
-  saveState();
   annotations[currentPageIndex] = [];
   renderPage(currentPageIndex);
 };
-
 window.nextPage = function () {
   if (currentPageIndex < pdfDoc.numPages - 1) {
     currentPageIndex++;
     renderPage(currentPageIndex);
   }
 };
-
 window.prevPage = function () {
   if (currentPageIndex > 0) {
     currentPageIndex--;
     renderPage(currentPageIndex);
   }
 };
-
-window.undo = undo;
-window.redo = redo;
