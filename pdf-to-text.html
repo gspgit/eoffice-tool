@@ -3,189 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced PDF to Text Converter</title>
-    <link href="https://cdn.jsdelivr.net/npm/@progress/kendo-theme-default@5.0.0/dist/all.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-        }
-
-        .advanced-converter {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .processing-pane {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .ocr-preview {
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 1rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .page-image {
-            max-width: 100%;
-            cursor: crosshair;
-        }
-
-        .text-output {
-            white-space: pre-wrap;
-            font-family: 'Courier Prime', monospace;
-            padding: 1rem;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            height: 600px;
-            overflow-y: auto;
-            background: #f8f9fa;
-        }
-
-        .advanced-controls {
-            display: grid;
-            gap: 1rem;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-    </style>
+    <title>PDF to Text Converter - PDF Toolkit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="advanced-converter">
-        <h1>Advanced PDF to Text Converter</h1>
-        
-        <div class="advanced-controls">
-            <input type="file" id="pdfInput" accept=".pdf" multiple>
-            <div class="toolbar">
-                <button id="ocrToggle">Enable OCR</button>
-                <select id="languageSelect">
-                    <option value="eng">English</option>
-                    <option value="spa">Spanish</option>
-                    <option value="fra">French</option>
-                    <option value="deu">German</option>
-                </select>
-                <input type="number" id="dpiInput" value="300" min="72" max="600">
-                <button id="processBtn">Process Files</button>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <img src="assets/logo.png" alt="PDF Toolkit">
+            </a>
+            <nav class="main-nav">
+                <a href="index.html#tools">All Tools</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#help">Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- PDF to Text Interface -->
+    <main class="tool-interface">
+        <div class="tool-header">
+            <h1><i class="fas fa-file-alt"></i> PDF to Text Converter</h1>
+            <p class="tool-description">Extract plain text from PDF documents easily</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="converter-container">
+            <!-- File Upload -->
+            <div class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-content">
+                        <i class="fas fa-file-pdf"></i>
+                        <h3>Select PDF file or drag here</h3>
+                        <input type="file" id="fileInput" accept=".pdf" hidden>
+                        <button class="btn-select" onclick="document.getElementById('fileInput').click()">
+                            Choose PDF
+                        </button>
+                    </div>
+                    <div class="file-info" id="fileInfo"></div>
+                </div>
+            </div>
+
+            <!-- Conversion Options -->
+            <div class="conversion-options">
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="preserveLineBreaks" checked>
+                        Preserve Line Breaks
+                    </label>
+                    <label>
+                        <input type="checkbox" id="removeWhitespace">
+                        Remove Extra Whitespace
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="convertToText()">
+                    <i class="fas fa-file-export"></i> Convert to Text
+                </button>
+                <button class="btn-secondary" onclick="clearFile()">
+                    Clear File
+                </button>
             </div>
         </div>
 
-        <div class="processing-pane">
-            <div class="ocr-preview" id="ocrPreview">
-                <canvas id="pageCanvas"></canvas>
-                <div id="ocrSelection"></div>
-            </div>
-            <div class="text-output" id="textOutput"></div>
+        <!-- Conversion Notice -->
+        <div class="conversion-notice">
+            <i class="fas fa-info-circle"></i>
+            <p>Note: Text formatting will be minimal. Only plain content will be extracted.</p>
         </div>
 
-        <div id="statusBar"></div>
-    </div>
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3>How to Convert:</h3>
+            <ol>
+                <li>Upload your PDF document</li>
+                <li>Choose conversion options</li>
+                <li>Click "Convert to Text"</li>
+                <li>Download the extracted text file</li>
+            </ol>
+        </div>
+    </main>
 
-    <!-- Core Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>© 2024 PDF Toolkit. All rights reserved.</p>
+        </div>
+    </footer>
 
-    <!-- Advanced Features Script -->
-    <script>
-        const worker = Tesseract.createWorker();
-        let currentPDF = null;
-        let ocrEnabled = false;
-
-        // Initialize OCR Worker
-        (async () => {
-            await worker.load();
-            await worker.loadLanguage('eng');
-            await worker.initialize('eng');
-        })();
-
-        document.getElementById('processBtn').addEventListener('click', processPDF);
-        document.getElementById('ocrToggle').addEventListener('click', toggleOCR);
-
-        async function processPDF() {
-            const files = document.getElementById('pdfInput').files;
-            const dpi = parseInt(document.getElementById('dpiInput').value);
-            const lang = document.getElementById('languageSelect').value;
-
-            for (const file of files) {
-                await processSinglePDF(file, dpi, lang);
-            }
-        }
-
-        async function processSinglePDF(file, dpi, lang) {
-            try {
-                const pdfData = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-                let fullText = '';
-
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale: dpi / 72 });
-                    
-                    // Text-based extraction
-                    const textContent = await page.getTextContent();
-                    let pageText = textContent.items.map(item => item.str).join(' ');
-
-                    // OCR fallback
-                    if (ocrEnabled && textContent.items.length < 10) {
-                        const ocrText = await performOCR(page, viewport);
-                        pageText = ocrText;
-                    }
-
-                    fullText += `Page ${i}:\n${pageText}\n\n`;
-                }
-
-                document.getElementById('textOutput').textContent += fullText;
-            } catch (error) {
-                console.error('Processing error:', error);
-            }
-        }
-
-        async function performOCR(page, viewport) {
-            const canvas = document.createElement('canvas');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            const ctx = canvas.getContext('2d');
-
-            await page.render({
-                canvasContext: ctx,
-                viewport: viewport
-            }).promise;
-
-            await worker.setParameters({
-                tessedit_pageseg_mode: 'auto',
-                tessedit_ocr_engine_mode: 'LSTM_ONLY',
-            });
-
-            const { data: { text } } = await worker.recognize(canvas);
-            return text;
-        }
-
-        function toggleOCR() {
-            ocrEnabled = !ocrEnabled;
-            document.getElementById('ocrToggle').textContent = 
-                ocrEnabled ? 'Disable OCR' : 'Enable OCR';
-        }
-
-        // Additional Features
-        function formatAsMarkdown(text) {
-            // Add markdown formatting logic
-            return text;
-        }
-
-        function detectTables(text) {
-            // Table detection logic
-            return text;
-        }
-    </script>
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.0.375/pdf.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/pdf-to-text.js"></script>
 </body>
 </html>
