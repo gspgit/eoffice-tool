@@ -2,38 +2,45 @@ let currentPDF = null;
 let compressedPDF = null;
 let originalSize = 0;
 
-document.getElementById("fileInput").addEventListener("change", handleFile);
-initDragDrop();
+// File Handling
+document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+document.addEventListener('DOMContentLoaded', initDragDrop);
 
-function handleFile(e) {
+function handleFileSelect(e) {
     const file = e.target.files[0];
-    if (!file || file.type !== "application/pdf") {
-        alert("Select a valid PDF");
+
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+        alert("Please select a valid PDF file");
         return;
     }
+
     currentPDF = file;
     originalSize = file.size;
-    document.getElementById("fileInfo").innerHTML =
-        `<p><strong>${file.name}</strong><br>${formatSize(file.size)}</p>`;
+
+    document.getElementById("fileInfo").innerHTML = `
+        <p><strong>File Name:</strong> ${file.name}</p>
+        <p><strong>Size:</strong> ${formatFileSize(file.size)}</p>
+    `;
 }
 
-function formatSize(bytes) {
+function formatFileSize(bytes) {
     const mb = bytes / (1024 * 1024);
     return mb.toFixed(2) + " MB";
 }
 
 async function compressPDF() {
-    if (!currentPDF) return alert("Select PDF first");
 
-    const progressContainer = document.getElementById("progressContainer");
-    const progressBar = document.getElementById("progressBar");
-    const progressText = document.getElementById("progressText");
-
-    progressContainer.style.display = "block";
-    progressBar.style.width = "0%";
+    if (!currentPDF) {
+        alert("Please select a PDF file");
+        return;
+    }
 
     try {
-        const qualityOption = document.querySelector('input[name="quality"]:checked').value;
+
+        const qualityOption =
+            document.querySelector('input[name="quality"]:checked').value;
 
         let imageQuality = 0.8;
         let scale = 1;
@@ -41,21 +48,22 @@ async function compressPDF() {
         if (qualityOption === "high") {
             imageQuality = 0.9;
             scale = 1;
-        } else if (qualityOption === "medium") {
+        }
+        else if (qualityOption === "medium") {
             imageQuality = 0.7;
             scale = 0.8;
-        } else {
+        }
+        else if (qualityOption === "low") {
             imageQuality = 0.5;
             scale = 0.6;
         }
 
         const arrayBuffer = await currentPDF.arrayBuffer();
+
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         const newPdf = await PDFLib.PDFDocument.create();
 
         for (let i = 1; i <= pdf.numPages; i++) {
-
-            progressText.textContent = `Processing page ${i}/${pdf.numPages}`;
 
             const page = await pdf.getPage(i);
             const viewport = page.getViewport({ scale: scale });
@@ -75,47 +83,60 @@ async function compressPDF() {
             const imgBytes = await fetch(imgData).then(res => res.arrayBuffer());
 
             const jpgImage = await newPdf.embedJpg(imgBytes);
-            const pageNew = newPdf.addPage([canvas.width, canvas.height]);
+            const newPage = newPdf.addPage([canvas.width, canvas.height]);
 
-            pageNew.drawImage(jpgImage, {
+            newPage.drawImage(jpgImage, {
                 x: 0,
                 y: 0,
                 width: canvas.width,
                 height: canvas.height
             });
-
-            progressBar.style.width = Math.round((i / pdf.numPages) * 100) + "%";
         }
 
         const compressedBytes = await newPdf.save();
         compressedPDF = new Blob([compressedBytes], { type: "application/pdf" });
 
-        document.getElementById("originalSize").textContent = formatSize(originalSize);
-        document.getElementById("compressedSize").textContent = formatSize(compressedPDF.size);
-        document.getElementById("results").style.display = "block";
-
-        progressText.textContent = "Compression Complete!";
+        showCompressionResults(compressedPDF.size);
 
     } catch (err) {
-        alert("Compression failed: " + err.message);
         console.error(err);
+        alert("Compression failed: " + err.message);
     }
 }
 
+function showCompressionResults(compressedSize) {
+
+    document.getElementById("results").style.display = "block";
+
+    document.getElementById("originalSize").textContent =
+        formatFileSize(originalSize);
+
+    document.getElementById("compressedSize").textContent =
+        formatFileSize(compressedSize);
+}
+
 function downloadCompressed() {
-    if (!compressedPDF) return;
-    saveAs(compressedPDF, "compressed.pdf");
+
+    if (!compressedPDF) {
+        alert("No compressed file available");
+        return;
+    }
+
+    saveAs(compressedPDF, `compressed-${currentPDF.name}`);
 }
 
 function clearFile() {
+
     currentPDF = null;
     compressedPDF = null;
+
     document.getElementById("fileInfo").innerHTML = "";
     document.getElementById("results").style.display = "none";
-    document.getElementById("progressContainer").style.display = "none";
 }
 
+// Drag & Drop
 function initDragDrop() {
+
     const dropZone = document.getElementById("dropZone");
 
     dropZone.addEventListener("dragover", e => {
@@ -130,7 +151,11 @@ function initDragDrop() {
     dropZone.addEventListener("drop", e => {
         e.preventDefault();
         dropZone.classList.remove("dragover");
-        const file = e.dataTransfer.files[0];
-        handleFile({ target: { files: [file] } });
+
+        if (e.dataTransfer.files.length) {
+            handleFileSelect({
+                target: { files: e.dataTransfer.files }
+            });
+        }
     });
 }
