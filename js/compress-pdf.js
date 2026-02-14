@@ -27,15 +27,20 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 
 function handleFile(e){
+
     const file = e.target.files[0];
+
     if(!file || file.type !== "application/pdf"){
         alert("Select valid PDF file");
         return;
     }
+
     currentPDF = file;
     originalSize = file.size;
+
     document.getElementById("fileInfo").innerHTML =
-        `<p><strong>${file.name}</strong><br>${formatSize(file.size)}</p>`;
+        `<p><strong>${file.name}</strong><br>
+        ${formatSize(file.size)}</p>`;
 }
 
 function formatSize(bytes){
@@ -49,37 +54,33 @@ async function compressPDF(){
         return;
     }
 
-    const progressContainer = document.getElementById("progressContainer");
-    const progressBar = document.getElementById("progressBar");
-    const progressText = document.getElementById("progressText");
+    // FIX: using SELECT instead of radio
+    const qualityOption =
+        document.getElementById("compressionLevel").value;
 
-    progressContainer.style.display = "block";
-    progressBar.style.width = "0%";
+    let imageQuality = 0.8;
+    let scale = 1;
+
+    if(qualityOption === "medium"){
+        imageQuality = 0.7;
+        scale = 0.8;
+    }
+    if(qualityOption === "low"){
+        imageQuality = 0.5;
+        scale = 0.6;
+    }
 
     try{
 
-        const qualityOption =
-        document.querySelector('input[name="quality"]:checked').value;
-
-        let imageQuality = 0.8;
-        let scale = 1;
-
-        if(qualityOption === "medium"){
-            imageQuality = 0.7;
-            scale = 0.8;
-        }
-        if(qualityOption === "low"){
-            imageQuality = 0.5;
-            scale = 0.6;
-        }
-
         const arrayBuffer = await currentPDF.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+        const pdf = await pdfjsLib.getDocument({
+            data: arrayBuffer
+        }).promise;
+
         const newPdf = await PDFLib.PDFDocument.create();
 
         for(let i=1;i<=pdf.numPages;i++){
-
-            progressText.textContent = `Processing ${i}/${pdf.numPages}`;
 
             const page = await pdf.getPage(i);
             const viewport = page.getViewport({ scale });
@@ -113,30 +114,33 @@ async function compressPDF(){
                 width:canvas.width,
                 height:canvas.height
             });
-
-            progressBar.style.width =
-            Math.round((i/pdf.numPages)*100)+"%";
         }
 
         const compressedBytes = await newPdf.save();
         compressedPDF =
         new Blob([compressedBytes],{type:"application/pdf"});
 
+        const reduction =
+        ((originalSize - compressedPDF.size)/originalSize)*100;
+
         document.getElementById("originalSize")
         .textContent = formatSize(originalSize);
 
         document.getElementById("compressedSize")
-        .textContent = formatSize(compressedPDF.size);
+        .textContent =
+        formatSize(compressedPDF.size) +
+        ` (${reduction.toFixed(1)}% reduced)`;
 
         document.getElementById("results")
         .style.display="block";
 
-        progressText.textContent="Compression Complete!";
+        document.getElementById("results")
+        .scrollIntoView({behavior:"smooth"});
 
-    }catch(err){
+    }
+    catch(err){
         console.error(err);
         alert("Compression failed: "+err.message);
-        progressContainer.style.display="none";
     }
 }
 
@@ -150,5 +154,4 @@ function clearFile(){
     compressedPDF=null;
     document.getElementById("fileInfo").innerHTML="";
     document.getElementById("results").style.display="none";
-    document.getElementById("progressContainer").style.display="none";
 }
