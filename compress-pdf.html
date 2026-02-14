@@ -2,220 +2,120 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Compress PDF - PDF Toolkit</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compress PDF - PDF Toolkit</title>
 
-    <!-- Font Awesome -->
     <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- PDF.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
-    </script>
-
-    <!-- PDF-Lib -->
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-
-    <!-- FileSaver -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: #f4f6f9;
-        }
-
-        .main-header {
-            background: #1f2937;
-            color: white;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .tool-interface {
-            max-width: 800px;
-            margin: 30px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-
-        .tool-header h1 {
-            margin: 0;
-            color: #111827;
-        }
-
-        .tool-description {
-            color: #6b7280;
-        }
-
-        .drop-zone {
-            border: 2px dashed #9ca3af;
-            padding: 40px;
-            text-align: center;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .drop-zone.dragover {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
-
-        .drop-zone i {
-            font-size: 40px;
-            color: #3b82f6;
-        }
-
-        .btn-select,
-        .btn-primary,
-        .btn-secondary,
-        .btn-download {
-            padding: 10px 15px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            margin: 5px 0;
-        }
-
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #9ca3af;
-            color: white;
-        }
-
-        .btn-download {
-            background: #10b981;
-            color: white;
-        }
-
-        .compression-options {
-            margin-top: 20px;
-        }
-
-        .results {
-            margin-top: 25px;
-            display: none;
-            padding: 15px;
-            background: #f9fafb;
-            border-radius: 8px;
-        }
-
-        .progress-container {
-            display: none;
-            margin-top: 15px;
-        }
-
-        .progress-bg {
-            background: #e5e7eb;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 10px;
-            width: 0%;
-            background: #3b82f6;
-            transition: width 0.3s;
-        }
-
-        footer {
-            text-align: center;
-            padding: 15px;
-            background: #111827;
-            color: white;
-            margin-top: 40px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <header class="main-header">
-    <h2><i class="fas fa-file-archive"></i> Compress PDF</h2>
+    <div class="header-container">
+        <a href="/" class="logo">
+            <img src="assets/logo.png" alt="PDF Toolkit">
+        </a>
+        <nav class="main-nav">
+            <a href="index.html#tools">All Tools</a>
+            <a href="index.html#features">Features</a>
+            <a href="index.html#help">Help</a>
+        </nav>
+    </div>
 </header>
 
 <main class="tool-interface">
 
     <div class="tool-header">
-        <h1>Reduce PDF File Size</h1>
+        <h1><i class="fas fa-file-archive"></i> Compress PDF</h1>
         <p class="tool-description">
-            Compress your PDF while keeping best possible quality.
+            Reduce PDF file size while preserving quality
         </p>
     </div>
 
     <!-- Upload Section -->
-    <div class="drop-zone" id="dropZone">
-        <i class="fas fa-file-upload"></i>
-        <h3>Select PDF file or drag here</h3>
-        <input type="file" id="fileInput" accept=".pdf" hidden>
-        <button class="btn-select"
-            onclick="document.getElementById('fileInput').click()">
-            Choose File
-        </button>
-        <div id="fileInfo"></div>
-    </div>
+    <div class="upload-section">
 
-    <!-- Quality -->
-    <div class="compression-options">
-        <label>
-            <input type="radio" name="quality" value="high" checked>
-            High Quality
-        </label><br>
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-content">
+                <i class="fas fa-file-upload"></i>
+                <h3>Select PDF file or drag here</h3>
+                <input type="file" id="fileInput" accept=".pdf" hidden>
+                <button class="btn-select"
+                    onclick="document.getElementById('fileInput').click()">
+                    Choose File
+                </button>
+            </div>
 
-        <label>
-            <input type="radio" name="quality" value="medium">
-            Medium (Recommended)
-        </label><br>
-
-        <label>
-            <input type="radio" name="quality" value="low">
-            Strong Compression
-        </label>
-    </div>
-
-    <!-- Buttons -->
-    <div>
-        <button class="btn-primary" onclick="compressPDF()">
-            <i class="fas fa-compress"></i> Compress PDF
-        </button>
-        <button class="btn-secondary" onclick="clearFile()">
-            Clear
-        </button>
-    </div>
-
-    <!-- Progress -->
-    <div class="progress-container" id="progressContainer">
-        <div class="progress-bg">
-            <div class="progress-bar" id="progressBar"></div>
+            <!-- File Info -->
+            <div class="file-list" id="fileInfo"></div>
         </div>
-        <p id="progressText">Processing...</p>
+
+        <!-- Compression Options -->
+        <div class="conversion-options">
+            <div class="option-group">
+                <label>Compression Level:</label>
+                <select id="compressionLevel">
+                    <option value="high">High Quality</option>
+                    <option value="medium" selected>Medium (Recommended)</option>
+                    <option value="low">Strong Compression</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-primary" onclick="compressPDF()">
+                <i class="fas fa-compress"></i> Compress PDF
+            </button>
+
+            <button class="btn-secondary" onclick="clearFile()">
+                Clear
+            </button>
+        </div>
+
     </div>
 
-    <!-- Results -->
-    <div class="results" id="results">
+    <!-- Result Section -->
+    <div class="instructions" id="results" style="display:none;">
+        <h3>Compression Result</h3>
         <p><strong>Original:</strong> <span id="originalSize"></span></p>
         <p><strong>Compressed:</strong> <span id="compressedSize"></span></p>
-        <button class="btn-download" onclick="downloadCompressed()">
+
+        <button class="btn-primary" onclick="downloadCompressed()">
             <i class="fas fa-download"></i> Download PDF
         </button>
     </div>
 
+    <!-- Instructions -->
+    <div class="instructions">
+        <h3>How to Compress:</h3>
+        <ol>
+            <li>Select your PDF file</li>
+            <li>Choose compression level</li>
+            <li>Click "Compress PDF"</li>
+            <li>Download the optimized file</li>
+        </ol>
+    </div>
+
 </main>
 
-<footer>
-    © 2026 PDF Toolkit. All rights reserved.
+<footer class="main-footer">
+    <div class="footer-container">
+        <p>© 2026 PDF Toolkit. All rights reserved.</p>
+    </div>
 </footer>
 
+<!-- Required Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+</script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<script src="js/main.js"></script>
 <script src="js/compress-pdf.js"></script>
 
 </body>
